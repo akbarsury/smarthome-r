@@ -1,0 +1,49 @@
+{
+  "name": "arah-smarthome",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "build-release": "nuxt build && rsync -avu --delete .output .build/",
+    "cf:build": "nuxt build --preset cloudflare-pages",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "db:generate": "drizzle-kit generate:sqlite",
+    "db:pull": "drizzle-kit pull",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "wrangler d1 migrations apply akbar-smarthome-cf --local",
+    "db:migrate:prod": "wrangler d1 migrations apply akbar-smarthome-cf",
+    "db:studio": "drizzle-kit studio --host 10.181.80.1"
+  },
+  "dependencies": {
+    "@nuxt/image": "^1.8.1",
+    "@nuxtjs/seo": "^2.0.0-rc.23",
+    "@nuxtjs/tailwindcss": "^6.12.2",
+    "@pinia/nuxt": "^0.9.0",
+    "@vueuse/components": "^12.0.0",
+    "@vueuse/core": "^11.3.0",
+    "@vueuse/nuxt": "^11.3.0",
+    "firebase-admin": "^13.0.2",
+    "next-auth": "4.21.1",
+    "nuxt": "^3.14.1592",
+    "pinia": "^2.3.0",
+    "vue": "latest",
+    "vue-router": "latest"
+  },
+  "packageManager": "yarn@4.5.3",
+  "devDependencies": {
+    "@iconify/json": "^2.2.281",
+    "@nuxt/icon": "^1.10.1",
+    "@sidebase/nuxt-auth": "^0.10.0",
+    "@types/node": "^22.9.1",
+    "@vite-pwa/assets-generator": "^0.2.6",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "sass": "^1.82.0",
+    "sharp": "^0.33.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
