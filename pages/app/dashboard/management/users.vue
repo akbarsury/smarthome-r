@@ -220,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-const { data: usersData } = await useFetch("/api/v1.0/users");
+const { data: usersData } = await useFetch("/api/v1.0/management/users");
 
 const addUser: {
   data: {
@@ -246,10 +246,13 @@ const addUser: {
 
   exec: async () => {
     addUser.data.status = "waiting";
-    const { data: addUserResult } = await useFetch("/api/v1.0/users", {
-      method: "post",
-      body: addUser.data.data,
-    });
+    const { data: addUserResult } = await useFetch(
+      "/api/v1.0/management/users",
+      {
+        method: "post",
+        body: addUser.data.data,
+      }
+    );
 
     if (addUserResult.value) {
       addUser.data.status = addUserResult.value.data.user
@@ -264,7 +267,7 @@ const addUser: {
 
     setTimeout(async () => {
       if (addUser.data.status === "success") {
-        await useFetch("/api/v1.0/users").then((_usersData) => {
+        await useFetch("/api/v1.0/management/users").then((_usersData) => {
           usersData.value = _usersData.data.value;
         });
         addUser.data = {
@@ -303,10 +306,13 @@ const deleteUser: {
 
   exec: async () => {
     deleteUser.data.status = "waiting";
-    const { data: deleteUserResult } = await useFetch("/api/v1.0/users", {
-      method: "delete",
-      body: { id: deleteUser.data.data.id },
-    });
+    const { data: deleteUserResult } = await useFetch(
+      "/api/v1.0/management/users",
+      {
+        method: "delete",
+        body: { id: deleteUser.data.data.id },
+      }
+    );
 
     if (deleteUserResult.value) {
       deleteUser.data.status = deleteUserResult.value.data.user
@@ -321,7 +327,7 @@ const deleteUser: {
 
     setTimeout(async () => {
       if (deleteUser.data.status === "success") {
-        await useFetch("/api/v1.0/users").then((_usersData) => {
+        await useFetch("/api/v1.0/management/users").then((_usersData) => {
           usersData.value = _usersData.data.value;
         });
         deleteUser.data = {

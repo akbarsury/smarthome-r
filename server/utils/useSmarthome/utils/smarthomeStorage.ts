@@ -1,5 +1,6 @@
 import admin, { type ServiceAccount } from "firebase-admin";
 import serviceAccount from "~/service-account.json"
+import encryption from "./encryption";
 
 class FirebaseAdmin {
     private app = admin.apps.length === 0 ? admin.initializeApp({
@@ -10,13 +11,20 @@ class FirebaseAdmin {
     public firestore = this.app.firestore()
 }
 
+type NodeStorageObject = {
+    credential?: string
+    token?: string
+    active: boolean
+    data?: []
+}
+
 class SmarthomeStorage {
     private storage = useStorage('db')
     private auth = new FirebaseAdmin().auth
     private firestore = new FirebaseAdmin().firestore
 
     user = () => {
-        const get = (id?: string) => this.auth.listUsers()
+        const get = () => this.auth.listUsers()
         const getByUid = (id: string) => this.auth.getUser(id)
         const getByEmail = (email: string) => this.auth.getUserByEmail(email)
         const add = ({ email, password, name }: { email: string, password: string, name: string }) => this.auth.createUser({
@@ -31,8 +39,28 @@ class SmarthomeStorage {
     }
 
     nodes = () => {
-        const register = (serialNumber: string) => this.storage.setItem(`node:${serialNumber}`, { active: false })
-        const activate = (serialNumber: string) => this.storage.setItem(`node:${serialNumber}`, { active: true })
+        const register = async (serialNumber: string) => {
+            const credential = encryption().encrypt(`${useRuntimeConfig().SmarthomeCredential}|${new Date().getTime()}`, useRuntimeConfig().SmarthomeCredential)
+            const token = credential ? encryption().encrypt(serialNumber, credential) : undefined
+            if (credential && token) {
+                const nodeStorage: NodeStorageObject = {
+                    credential,
+                    token,
+                    active: false
+                }
+                await this.storage.setItem(`node:${serialNumber}`, nodeStorage)
+                return nodeStorage
+            }
+        }
+        const activate = async (serialNumber: string, token: string) => {
+            let node = await this.storage.getItem(`node:${serialNumber}`) as NodeStorageObject
+            const maybeSerialNumber = node.credential ? encryption().decrypt(token, node.credential) : undefined
+            if (maybeSerialNumber === serialNumber) {
+                node = { active: true }
+                await this.storage.setItem(`node:${serialNumber}`, node)
+                return node
+            }
+        }
         const get = () => this.storage.getKeys("node")
         const use = (serialNumber: string) => this.storage.getItem(`node:${serialNumber}`)
 

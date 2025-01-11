@@ -5,9 +5,8 @@ type DeleteUser = {
 }
 
 export default defineEventHandler(async (event) => {
-    const session = await getServerSession(event)
-    const isSessionNotExpires = session ? new Date(session.expires).getTime() > new Date().getTime() : false
-    if (!isSessionNotExpires) return setResponseStatus(event, 401, "Unauthorized")
+    const { session } = await useSmarthome().requestHandler(event).exec('user')
+    if (!session) return setResponseStatus(event, 401, "Unauthorized")
     else {
         const { id } = await readBody(event) as DeleteUser
         if (!id) return setResponseStatus(event, 400, "Bad Request")

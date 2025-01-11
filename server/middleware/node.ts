@@ -1,3 +1,3 @@
 export default defineEventHandler(async (event) => {
-    return null
+  // return 'Hello Nitro'
 })

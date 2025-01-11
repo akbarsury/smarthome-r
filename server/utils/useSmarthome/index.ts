@@ -1,13 +1,17 @@
+import type { H3Event } from 'h3';
 import { useUnit, useUnitControlledItems } from './utils/controlledItems'
 import { default as _encryption } from './utils/encryption'
 import { SmarthomeWebsocket } from './utils/SmarthomeWebsocket'
 import { smarthomeWebsocketHandler } from './utils/smarthomeWebsocketHandler'
 import SmarthomeStorage from './utils/smarthomeStorage';
+import { RequestHandler } from './utils/requestHandler';
 
 const useSmarthome = () => {
     const encryption = _encryption()
 
     const storage = new SmarthomeStorage()
+
+    const requestHandler = (event: H3Event) => new RequestHandler(event)
 
     const unit = () => {
         const get = async () => (await useUnit()).get()
@@ -25,7 +29,7 @@ const useSmarthome = () => {
         return { _data, ws }
     }
 
-    return { encryption, storage, unit, getControlledItems, webSocket }
+    return { encryption, storage, requestHandler, unit, getControlledItems, webSocket }
 }
 
 export default useSmarthome

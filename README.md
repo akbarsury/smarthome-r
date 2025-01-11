@@ -1,15 +1,7 @@
-# Command message string
+# Smarthome Assistant
 
-1. Server peer assign
-==> Assign-Server-Peer
-1. Client connect
-==> Client-connect
-2. Request action
-==> Request-Action::get-controlled-items
-==> Request-Action::push-control-button::{data}
-    data:{buttonId}
+***Step to setup***
+1. configure .env
+2. configure google service account(use firebase). See file service-account.example, rename it to service-account.json
 
-
-ResponsObject::{data}
-ResponsArray::{data}
-
+folow me at github @akbarsury
