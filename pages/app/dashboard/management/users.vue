@@ -17,7 +17,7 @@
         >
           <div
             class="grid grid-cols-subgrid gap-2 col-span-3 bg-orange-100 hover:bg-orange-200 rounded p-2"
-            v-for="user in usersData?.data.users || []"
+            v-for="user in usersData?.data || []"
           >
             <div class="">
               <span class="block capitalize">
@@ -58,7 +58,7 @@
         </div>
       </div>
     </div>
-    <div class="add-user" v-if="addUser.data.status">
+    <div class="add-user" v-if="addUser.meta.status">
       <CompositeModalFullPage @click-outside="addUser.close()">
         <div class="min-w-[320px]">
           <div class="div">
@@ -66,58 +66,62 @@
               <h3 class="text-lg font-bold text-center">Add new user</h3>
             </div>
             <div class="flex flex-col gap-4">
-              <div class="input-group">
-                <label class="block text-neutral-700 mb-2" for="name"
-                  >Name</label
-                >
-                <input
-                  class="w-full border border-orange-400 rounded p-1"
-                  id="name"
-                  type="name"
-                  v-model="addUser.data.data.name"
-                />
+              <div
+                class="new-user-input-form"
+                v-if="!addUser.meta.status.startsWith('done')"
+              >
+                <div class="flex flex-col gap-4">
+                  <div class="input-group">
+                    <label class="block text-neutral-700 mb-2" for="name"
+                      >Name</label
+                    >
+                    <input
+                      class="w-full border border-orange-400 rounded p-1"
+                      id="name"
+                      type="name"
+                      v-model="addUser.data.newUser.name"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label class="block text-neutral-700 mb-2" for="email"
+                      >Email</label
+                    >
+                    <input
+                      class="w-full border border-orange-400 rounded p-1"
+                      id="email"
+                      type="email"
+                      v-model="addUser.data.newUser.email"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <label class="block text-neutral-700 mb-2" for="email"
+                      >Password</label
+                    >
+                    <input
+                      class="w-full border border-orange-400 rounded p-1"
+                      type="password"
+                      v-model="addUser.data.newUser.password"
+                    />
+                  </div>
+                </div>
               </div>
-              <div class="input-group">
-                <label class="block text-neutral-700 mb-2" for="email"
-                  >Email</label
-                >
-                <input
-                  class="w-full border border-orange-400 rounded p-1"
-                  id="email"
-                  type="email"
-                  v-model="addUser.data.data.email"
-                />
-              </div>
-              <div class="input-group">
-                <label class="block text-neutral-700 mb-2" for="email"
-                  >Password</label
-                >
-                <input
-                  class="w-full border border-orange-400 rounded p-1"
-                  type="password"
-                  v-model="addUser.data.data.password"
-                />
-              </div>
-              <div class="status">
+              <div class="add-user-status" v-else>
                 <div
                   :class="[
                     'rounded p-2 px-4',
-                    addUser.data.status === 'failed'
+                    addUser.meta.status === 'done:failed'
                       ? 'bg-red-300'
                       : 'bg-green-300',
                   ]"
-                  v-if="
-                    ['failed', 'success'].includes(addUser.data.status!)
-                  "
                 >
-                  {{ addUser.data.message }}
+                  {{ addUser.meta.message }}
                 </div>
               </div>
               <div class="add-user-action flex justify-end gap-2">
                 <button
                   :class="[
                     'border p-1 px-3 rounded',
-                    addUser.data.status != 'waiting'
+                    addUser.meta.status != 'waiting'
                       ? 'bg-red-300 hover:bg-red-400 border-red-500'
                       : 'bg-neutral-400 pointer-events-none',
                   ]"
@@ -128,7 +132,7 @@
                 <button
                   :class="[
                     'border p-1 px-3 rounded',
-                    addUser.data.status != 'waiting'
+                    addUser.meta.status != 'waiting'
                       ? 'bg-orange-300 hover:bg-orange-400 border-orange-500'
                       : 'bg-neutral-400 pointer-events-none',
                   ]"
@@ -143,7 +147,7 @@
       </CompositeModalFullPage>
     </div>
     <div class="user-action-modal">
-      <div class="delete-user" v-if="deleteUser.data.status">
+      <div class="delete-user" v-if="deleteUser.meta.status">
         <CompositeModalFullPage @click-outside="deleteUser.close()">
           <div class="min-w-[320px]">
             <div class="div">
@@ -151,7 +155,7 @@
                 <h3 class="text-lg font-bold text-center">Delete user</h3>
               </div>
               <div class="flex flex-col gap-4">
-                <div class="">
+                <div class="" v-if="!deleteUser.meta.status.startsWith('done')">
                   <span class="block mb-2">Are you sure to delete user ?</span>
                   <div
                     class="user-information border border-blue-400 rounded p-2"
@@ -162,35 +166,44 @@
                     <div>
                       <span class="inline-block w-[48px]">Name</span>
                       <span class="capitalize"
-                        >: {{ deleteUser.data.data.name }}</span
+                        >:
+                        {{
+                          usersData?.data?.find(
+                            (user) => user.id === deleteUser.data.userId
+                          )?.name
+                        }}</span
                       >
                     </div>
                     <div>
                       <span class="inline-block w-[48px]">Email</span>
-                      <span>: {{ deleteUser.data.data.email }}</span>
+                      <span
+                        >:
+                        {{
+                          usersData?.data?.find(
+                            (user) => user.id === deleteUser.data.userId
+                          )?.email
+                        }}</span
+                      >
                     </div>
                   </div>
                 </div>
-                <div class="status">
+                <div class="delete-user-status" v-else>
                   <div
                     :class="[
                       'rounded p-2 px-4',
-                      deleteUser.data.status === 'failed'
+                      deleteUser.meta.status === 'done:failed'
                         ? 'bg-red-300'
                         : 'bg-green-300',
                     ]"
-                    v-if="
-                      ['failed', 'success'].includes(deleteUser.data.status)
-                    "
                   >
-                    {{ deleteUser.data.message }}
+                    {{ deleteUser.meta.message }}
                   </div>
                 </div>
-                <div class="add-user-action flex justify-end gap-2">
+                <div class="delete-user-action flex justify-end gap-2">
                   <button
                     :class="[
                       'border p-1 px-3 rounded',
-                      deleteUser.data.status != 'waiting'
+                      deleteUser.meta.status != 'waiting'
                         ? 'bg-red-300 hover:bg-red-400 border-red-500'
                         : 'bg-neutral-400 pointer-events-none',
                     ]"
@@ -201,7 +214,7 @@
                   <button
                     :class="[
                       'border p-1 px-3 rounded',
-                      deleteUser.data.status != 'waiting'
+                      deleteUser.meta.status != 'waiting'
                         ? 'bg-orange-300 hover:bg-orange-400 border-orange-500'
                         : 'bg-neutral-400 pointer-events-none',
                     ]"
@@ -220,120 +233,115 @@
 </template>
 
 <script setup lang="ts">
-const { data: usersData } = await useFetch("/api/v1.0/management/users");
+const { data: usersData, refresh: refreshUsersData } = await useFetch(
+  "/api/v1.0/user/users"
+);
 
 const addUser: {
   data: {
-    data: { name?: string; email?: string; password?: string };
-    status?: "bind" | "waiting" | "failed" | "success";
+    newUser: { name?: string; email?: string; password?: string };
+  };
+  meta: {
+    status?: "bind" | "waiting" | "done:failed" | "done:success";
     message?: string;
   };
   open: () => void;
   close: () => void;
   exec: () => void;
 } = reactive({
-  data: { data: {} },
+  data: { newUser: {} },
+
+  meta: {},
 
   open: () => {
-    addUser.data.status = "bind";
+    addUser.meta.status = "bind";
   },
 
   close: () => {
-    addUser.data = {
-      data: {},
-    };
+    addUser.meta = {};
+    addUser.data = { newUser: {} };
   },
 
   exec: async () => {
-    addUser.data.status = "waiting";
-    const { data: addUserResult } = await useFetch(
-      "/api/v1.0/management/users",
-      {
-        method: "post",
-        body: addUser.data.data,
-      }
-    );
+    addUser.meta.status = "waiting";
+    const { data: addUserResult } = await useFetch("/api/v1.0/user/add", {
+      method: "post",
+      body: addUser.data.newUser,
+    });
 
     if (addUserResult.value) {
-      addUser.data.status = addUserResult.value.data.user
-        ? "success"
-        : "failed";
-      addUser.data = {
-        ...addUser.data,
-        data: addUser.data.data,
-        message: addUserResult.value.message,
+      addUser.meta = {
+        status: addUserResult.value?.data ? "done:success" : "done:failed",
+        message: addUserResult.value?.message,
       };
+      addUser.data.newUser = addUserResult.value?.data
+        ? {}
+        : addUser.data.newUser;
+    }
+
+    if (addUser.meta.status === "done:success") {
+      await refreshUsersData();
     }
 
     setTimeout(async () => {
-      if (addUser.data.status === "success") {
-        await useFetch("/api/v1.0/management/users").then((_usersData) => {
-          usersData.value = _usersData.data.value;
-        });
-        addUser.data = {
-          data: {},
-        };
-      }
+      addUser.close();
     }, 3000);
   },
 });
 
 const deleteUser: {
   data: {
-    data: { id?: string; name?: string; email?: string };
-    status?: "bind" | "waiting" | "failed" | "success";
+    userId?: string;
+  };
+  meta: {
+    status?: "bind" | "waiting" | "done:failed" | "done:success";
     message?: string;
   };
   open: (id: string) => void;
   close: () => void;
   exec: () => void;
 } = reactive({
-  data: { data: {} },
+  data: {},
+
+  meta: {},
 
   open: (id: string) => {
-    const selectedUserToDelete = usersData.value?.data.users?.find(
-      (user) => user.id == id
-    );
-    if (selectedUserToDelete) {
-      deleteUser.data.data = selectedUserToDelete as any;
-      deleteUser.data.status = "bind";
+    deleteUser.data.userId = usersData.value?.data?.find(
+      (user) => user.id === id
+    )?.id;
+    if (deleteUser.data.userId) {
+      deleteUser.meta.status = "bind";
     }
   },
 
   close: () => {
-    deleteUser.data = { data: {} };
+    deleteUser.meta = {};
+    deleteUser.data = {};
   },
 
   exec: async () => {
-    deleteUser.data.status = "waiting";
+    deleteUser.meta.status = "waiting";
     const { data: deleteUserResult } = await useFetch(
-      "/api/v1.0/management/users",
-      {
-        method: "delete",
-        body: { id: deleteUser.data.data.id },
-      }
+      `/api/v1.0/user/${deleteUser.data.userId}` as "/api/v1.0/user/:userId",
+      { method: "delete" }
     );
 
-    if (deleteUserResult.value) {
-      deleteUser.data.status = deleteUserResult.value.data.user
-        ? "success"
-        : "failed";
-      deleteUser.data = {
-        ...deleteUser.data,
-        data: deleteUser.data.data,
+    if (deleteUserResult.value?.data) {
+      deleteUser.meta = {
+        status: deleteUserResult.value?.data?.userId
+          ? "done:success"
+          : "done:failed",
         message: deleteUserResult.value.message,
       };
+      deleteUser.data = {};
+    }
+
+    if (deleteUser.meta.status === "done:success") {
+      await refreshUsersData();
     }
 
     setTimeout(async () => {
-      if (deleteUser.data.status === "success") {
-        await useFetch("/api/v1.0/management/users").then((_usersData) => {
-          usersData.value = _usersData.data.value;
-        });
-        deleteUser.data = {
-          data: {},
-        };
-      }
+      deleteUser.close();
     }, 3000);
   },
 });
