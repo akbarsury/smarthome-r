@@ -17,6 +17,7 @@ type NodeStorageObject = {
     active: boolean
     data?: []
 }
+type NodeObject = { serialNumber: string } | ({ serialNumber: string } & NodeStorageObject)
 
 class SmarthomeStorage {
     private storage = useStorage('db')
@@ -61,7 +62,25 @@ class SmarthomeStorage {
                 return node
             }
         }
-        const get = () => this.storage.getKeys("node")
+        const get = async (options?: { activeOnly?: boolean }) => {
+            const _nodes = this.storage.getKeys("node").then((keys): NodeObject[] =>
+                keys.map((keyName) => {
+                    return {
+                        serialNumber: keyName.startsWith("node:")
+                            ? keyName.replace("node:", "")
+                            : keyName,
+                    }
+                }))
+            let nodes = (await _nodes).map((node) => node.serialNumber)
+            if (options?.activeOnly) {
+                nodes = await nodes.reduce<Promise<string[]>>(async (last, current) => {
+                    const isActive = (await this.storage.getItem(`node:${current}`) as NodeStorageObject).active === true
+                    return isActive ? (await last).concat(current) : last
+                }, Promise.resolve([]))
+            }
+            const withValue = () => { }
+            return { nodes, withValue }
+        }
         const use = (serialNumber: string) => this.storage.getItem(`node:${serialNumber}`)
 
         return { register, activate, get, use }
