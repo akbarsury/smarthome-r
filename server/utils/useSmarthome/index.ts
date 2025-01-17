@@ -13,6 +13,12 @@ const useSmarthome = () => {
 
     const requestHandler = (event: H3Event) => new RequestHandler(event)
 
+
+    const getBearer = (event: H3Event) => {
+        const authorizationHeader = getHeader(event, "authorization")
+        return authorizationHeader && authorizationHeader.startsWith('Bearer ') ? authorizationHeader.replace('Bearer ', '') : undefined
+    }
+
     const unit = () => {
         const get = async () => (await useUnit()).get()
         const validate = async (unitName: string) => (await useUnit()).validate(unitName)
@@ -29,7 +35,7 @@ const useSmarthome = () => {
         return { _data, ws }
     }
 
-    return { encryption, storage, requestHandler, unit, getControlledItems, webSocket }
+    return { encryption, storage, requestHandler, getBearer, unit, getControlledItems, webSocket }
 }
 
 export default useSmarthome

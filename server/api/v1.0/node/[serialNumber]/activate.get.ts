@@ -1,13 +1,13 @@
 export default defineEventHandler(async (event) => {
-    const { session } = await useSmarthome().requestHandler(event).exec('user')
-    if (!session) return generateApiResponse(event, { statusCode: 401 })
-    const serialNumber = (await readBody(event))["serial-number"] as string
+    const token = useSmarthome().getBearer(event)
+    if (!token) return generateApiResponse(event, { statusCode: 401 })
+    const serialNumber = getRouterParam(event, "serialNumber")
     if (!serialNumber) return generateApiResponse(event, {
         statusCode: 400, errors: {
-            "serial-number": "serial-number is required"
+            "serialNumber": "serialNumber is required"
         }
     })
-    const node = await useSmarthome().storage.nodes().register(serialNumber)
+    const node = await useSmarthome().storage.nodes().activate(serialNumber, token)
     return generateApiResponse(event,
         {
             statusCode: node ? 200 : 500,
