@@ -11,13 +11,8 @@ class FirebaseAdmin {
     public firestore = this.app.firestore()
 }
 
-type NodeStorageObject = {
-    credential?: string
-    token?: string
-    active: boolean
-    data?: []
-}
-type NodeObject = { serialNumber: string } | ({ serialNumber: string } & NodeStorageObject)
+type NodeStorageObject = NodeObject.PreActivate & NodeObject.General & NodeObject.Data
+type NodeObject = NodeObject.SerialNumber | (NodeObject.SerialNumber & NodeStorageObject)
 
 class SmarthomeStorage {
     private storage = useStorage('db')
@@ -40,24 +35,26 @@ class SmarthomeStorage {
     }
 
     nodes = () => {
-        const register = async (serialNumber: string) => {
+        const register = async (serialNumber: string, uuid: string) => {
             const credential = encryption().encrypt(`${useRuntimeConfig().SmarthomeCredential}|${new Date().getTime()}`, useRuntimeConfig().SmarthomeCredential)
             const token = credential ? encryption().encrypt(serialNumber, credential) : undefined
             if (credential && token) {
                 const nodeStorage: NodeStorageObject = {
                     credential,
                     token,
-                    active: false
+                    name: serialNumber,
+                    active: false,
+                    acceptedUsers: [uuid]
                 }
                 await this.storage.setItem(`node:${serialNumber}`, nodeStorage)
                 return nodeStorage
             }
         }
         const activate = async (serialNumber: string, token: string) => {
-            let node = await this.storage.getItem(`node:${serialNumber}`) as NodeStorageObject
+            let node = await this.nodes().use(serialNumber)
             const maybeSerialNumber = node.credential ? encryption().decrypt(token, node.credential) : undefined
             if (maybeSerialNumber === serialNumber) {
-                node = { active: true }
+                node = { ...node, active: true, credential: undefined, token: undefined }
                 await this.storage.setItem(`node:${serialNumber}`, node)
                 return node
             }
@@ -81,7 +78,14 @@ class SmarthomeStorage {
             const withValue = () => { }
             return { nodes, withValue }
         }
-        const use = (serialNumber: string) => this.storage.getItem(`node:${serialNumber}`)
+        const update = async (serialNumber: string, update: { general?: NodeObject.General, data?: NodeObject.Data }) => {
+            let node = await this.nodes().use(serialNumber)
+            node = update.general ? { ...node, ...update.general } : node
+            node = update.data ? { ...node, ...update.data } : node
+            await this.storage.setItem(`node:${serialNumber}`, node)
+            return node
+        }
+        const use = (serialNumber: string) => this.storage.getItem(`node:${serialNumber}`) as unknown as Promise<NodeStorageObject>
 
         return { register, activate, get, use }
     }

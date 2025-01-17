@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
             "serial-number": "serial-number is required"
         }
     })
-    const node = await useSmarthome().storage.nodes().register(serialNumber)
+    const node = await useSmarthome().storage.nodes().register(serialNumber, session.user?.email!)
     return generateApiResponse(event,
         {
             statusCode: node ? 200 : 500,

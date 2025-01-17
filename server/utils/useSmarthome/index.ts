@@ -13,7 +13,6 @@ const useSmarthome = () => {
 
     const requestHandler = (event: H3Event) => new RequestHandler(event)
 
-
     const getBearer = (event: H3Event) => {
         const authorizationHeader = getHeader(event, "authorization")
         return authorizationHeader && authorizationHeader.startsWith('Bearer ') ? authorizationHeader.replace('Bearer ', '') : undefined

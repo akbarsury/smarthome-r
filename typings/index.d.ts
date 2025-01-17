@@ -7,3 +7,21 @@ namespace apis {
         }
     }
 }
+
+namespace NodeObject {
+    interface PreActivate {
+        credential?: string
+        token?: string
+    }
+    interface General {
+        name: string
+        active: boolean
+        acceptedUsers?: string[],
+    }
+    interface SerialNumber {
+        serialNumber: string
+    }
+    interface Data {
+        data?: []
+    }
+}
