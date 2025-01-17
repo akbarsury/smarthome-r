@@ -264,19 +264,20 @@ const addUser: {
 
   exec: async () => {
     addUser.meta.status = "waiting";
-    const { data: addUserResult } = await useFetch("/api/v1.0/user/add", {
-      method: "post",
-      body: addUser.data.newUser,
-    });
+    const { data: addUserData, errors: addUserErrors } = await $fetch(
+      "/api/v1.0/user/add",
+      {
+        method: "post",
+        body: addUser.data.newUser,
+      }
+    );
 
-    if (addUserResult.value) {
+    if (addUserData) {
       addUser.meta = {
-        status: addUserResult.value?.data ? "done:success" : "done:failed",
-        message: addUserResult.value?.message,
+        status: addUserErrors ? "done:success" : "done:failed",
+        message: addUserErrors?.toString(),
       };
-      addUser.data.newUser = addUserResult.value?.data
-        ? {}
-        : addUser.data.newUser;
+      addUser.data.newUser = addUserData ? {} : addUser.data.newUser;
     }
 
     if (addUser.meta.status === "done:success") {
@@ -321,17 +322,15 @@ const deleteUser: {
 
   exec: async () => {
     deleteUser.meta.status = "waiting";
-    const { data: deleteUserResult } = await useFetch(
+    const { data: deleteUserData } = await $fetch(
       `/api/v1.0/user/${deleteUser.data.userId}` as "/api/v1.0/user/:userId",
       { method: "delete" }
     );
 
-    if (deleteUserResult.value?.data) {
+    if (deleteUserData) {
       deleteUser.meta = {
-        status: deleteUserResult.value?.data?.userId
-          ? "done:success"
-          : "done:failed",
-        message: deleteUserResult.value.message,
+        status: deleteUserData?.userId ? "done:success" : "done:failed",
+        // message: deleteUserResult.value.message,
       };
       deleteUser.data = {};
     }

@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
     const id = getRouterParam(event, "userId")
     if (!id) return setResponseStatus(event, 400, "Bad Request")
     const user = await useSmarthome().storage.user().remove(id)
-    return generateApiResponse(200, {
+    return generateApiResponse(event, {
         message: user ? "Success delete user" : "Failed delete user",
         data: { userId: user?.id }
     })

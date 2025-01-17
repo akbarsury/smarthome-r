@@ -10,9 +10,9 @@ export default defineEventHandler(async (event) => {
     const { email, password, name } = await readBody(event) as NewUser
     if (!(email && password && name)) return setResponseStatus(event, 400, "Bad Request")
     const user = await useSmarthome().storage.user().add({ email, password, name })
-    return generateApiResponse(200, {
+    return generateApiResponse(event, {
         message: user ? "Success create user" : "Failed create user",
-        data: [user].map((user) => {
+        data: [user].map<apis.users.IUser>((user) => {
             return {
                 id: user.uid,
                 email: user.email || null,
