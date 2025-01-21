@@ -3,11 +3,11 @@ export default defineEventHandler(async (event) => {
     const users = session ? await useSmarthome().storage.user().get() : undefined
     return generateApiResponse(event, {
         statusCode: session ? 200 : 401,
-        data: users ? users.users.map<apis.users.IUser>((user) => {
+        data: users ? users.users.map<Apis.Users.User>((user) => {
             return {
-                id: user.uid,
-                email: user.email || null,
-                name: user.displayName || null
+                id: user.uid || "NULL",
+                email: user.email || "NULL",
+                name: user.displayName || "NULL"
             }
         }) : undefined
     })

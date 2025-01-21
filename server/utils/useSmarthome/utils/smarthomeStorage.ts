@@ -11,8 +11,8 @@ class FirebaseAdmin {
     public firestore = this.app.firestore()
 }
 
-type NodeStorageObject = NodeObject.PreActivate & NodeObject.General & NodeObject.Data
-type NodeObject = NodeObject.SerialNumber | (NodeObject.SerialNumber & NodeStorageObject)
+type NodeStorageObject = Server.Node.PreActivate & Server.Node.General & Server.Node.Items
+type NodeObject = Server.Node.SerialNumber | (Server.Node.SerialNumber & NodeStorageObject)
 
 class SmarthomeStorage {
     private storage = useStorage('db')
@@ -29,9 +29,9 @@ class SmarthomeStorage {
             displayName: name
         })
         const remove = (id: string) => this.auth.deleteUser(id).then(() => { return { id } }).catch((e) => undefined)
-        const updateUser = (id: string, userData: { name?: string, email?: string }) => this.auth.updateUser(id, userData)
+        const update = (id: string, userData: { name?: string, email?: string }) => this.auth.updateUser(id, userData)
         const updatePassword = (id: string, password: string) => this.auth.updateUser(id, { password })
-        return { get, getByUid, getByEmail, add, remove, updateUser, updatePassword }
+        return { get, getByUid, getByEmail, add, remove, update, updatePassword }
     }
 
     nodes = () => {
@@ -60,25 +60,30 @@ class SmarthomeStorage {
             }
         }
         const get = async (options?: { activeOnly?: boolean }) => {
-            const _nodes = this.storage.getKeys("node").then((keys): NodeObject[] =>
-                keys.map((keyName) => {
-                    return {
-                        serialNumber: keyName.startsWith("node:")
-                            ? keyName.replace("node:", "")
-                            : keyName,
-                    }
-                }))
-            let nodes = (await _nodes).map((node) => node.serialNumber)
+            let nodes: string[] = await this.storage.getKeys("node").then((keys) =>
+                keys.map((keyName) => keyName.startsWith("node:")
+                    ? keyName.replace("node:", "")
+                    : keyName
+                ))
             if (options?.activeOnly) {
                 nodes = await nodes.reduce<Promise<string[]>>(async (last, current) => {
                     const isActive = (await this.storage.getItem(`node:${current}`) as NodeStorageObject).active === true
                     return isActive ? (await last).concat(current) : last
                 }, Promise.resolve([]))
             }
-            const withValue = () => { }
+            const withValue = async () => {
+                return await nodes.reduce<Promise<NodeObject[]>>(async (last, current) => {
+                    const node = {
+                        serialNumber: current,
+                        ...(await this.storage.getItem(`node:${current}`) as NodeStorageObject)
+                    }
+                    return (await last).concat(node)
+                }, Promise.resolve([]))
+            }
             return { nodes, withValue }
         }
-        const update = async (serialNumber: string, update: { general?: NodeObject.General, data?: NodeObject.Data }) => {
+        const remove = async (serialNumber: string) => this.storage.removeItem(`node:${serialNumber}`).then(() => { return { serialNumber } }).catch((e) => undefined)
+        const update = async (serialNumber: string, update: { general?: Server.Node.General, data?: Server.Node.Items }) => {
             let node = await this.nodes().use(serialNumber)
             node = update.general ? { ...node, ...update.general } : node
             node = update.data ? { ...node, ...update.data } : node
@@ -87,7 +92,7 @@ class SmarthomeStorage {
         }
         const use = (serialNumber: string) => this.storage.getItem(`node:${serialNumber}`) as unknown as Promise<NodeStorageObject>
 
-        return { register, activate, get, use }
+        return { register, activate, get, remove, update, use }
     }
 }
 
