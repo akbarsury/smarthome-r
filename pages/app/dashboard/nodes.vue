@@ -1,18 +1,19 @@
 <template>
   <div class="nodes">
     <div class="nodes-list" v-if="!serialNumberTag">
-      <div class="flex">
+      <div class="flex gap-2">
         <div
-          class="bg-orange-200 rounded p-4"
+          class="basis-32 flex-grow max-w-48"
           v-for="node in nodesData?.data as Apis.Nodes.Node[] || []"
         >
           <NuxtLink
+            class="block bg-orange-100 hover:text-orange-700 border border-transparent hover:border-orange-200 rounded p-4"
             :to="{
               name: 'app-dashboard-nodes',
               query: { tag: node.serialNumber },
             }"
           >
-            <span class="underline font-bold">
+            <span class="block uppercase font-bold truncate">
               {{ node.name }}
             </span>
           </NuxtLink>
