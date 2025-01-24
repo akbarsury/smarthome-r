@@ -13,7 +13,7 @@ namespace Server {
             serialNumber: string
         }
         interface Items {
-            items?: ({
+            items: ({
                 name: string,
                 type: "switch" | "push",
                 icon: string,

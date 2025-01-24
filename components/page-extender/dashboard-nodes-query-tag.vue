@@ -7,12 +7,14 @@
       </NuxtLink>
     </div>
     <div class="basis">
-      <span class="text-orange-700 font-semibold">
+      <span class="text-orange-700 uppercase font-semibold">
         {{ nodeData?.data?.name }}</span
       >
     </div>
   </div>
-  {{ clickTimeCounter }}
+  <div>
+    {{ { itemAction: itemAction.data.value || null } }}
+  </div>
   <div class="flex flex-wrap gap-2" v-if="nodeData?.data?.items">
     <div
       class="node-item min-w-72 basis-full sm:basis-[calc(50%_-_0.25rem)] border border-neutral-400 rounded p-4"
@@ -41,7 +43,8 @@
                   ? 'before:bg-green-700'
                   : 'before:bg-red-700',
               ]"
-              @click.prevent="itemAction(nodeItem.name)"
+              @mousedown="itemAction.fn(nodeItem.name).init()"
+              @click.prevent="itemAction.fn().exec()"
             >
               <Icon
                 class="block relative translate-y-[-13px]"
@@ -67,8 +70,8 @@
               :class="[
                 'h-[26px] bg-blue-600 border-[5px] border-neutral-950 outline outline-[2px] outline-neutral-50 active:translate-y-[2px] shadow-[0px_5px_#999] shadow-neutral-400 active:shadow-[0px_3px_#888] rounded-[15px]',
               ]"
-              @mousedown="itemAction().init()"
-              @click.prevent="itemAction(nodeItem.name)"
+              @mousedown="itemAction.fn(nodeItem.name).init()"
+              @click.prevent="itemAction.fn().exec()"
             >
               <Icon
                 :class="['block bg-transparent active:translate-y-[9px] h-4']"
@@ -81,119 +84,97 @@
       </div>
     </div>
   </div>
-  <div class="confirm p-4">
-    <div
-      class="border-2 border-neutral-400 h-[56px] max-w-[480px] rounded-full overflow-hidden p-1 py-6"
-    >
-      <div class="relative" ref="swipeElRef">
-        <span
-          :class="[
-            'block absolute bg-orange-400/30 h-[44px] rounded-full mt-[-21px]',
-            swipeConfirm.confirmed
-              ? 'cursor-not-allowed w-full'
-              : 'cursor-pointer w-[44px] ',
-          ]"
-          :style="{
-            left: swipeConfirm.swipe.isSwiping
-              ? swipeConfirm.bul.right >= swipeConfirm.el.right
-                ? undefined
-                : `${swipeConfirm.swipe.distanceX * -1}px`
-              : '0px',
-            right:
-              swipeConfirm.swipe.isSwiping &&
-              swipeConfirm.bul.right >= swipeConfirm.el.right
-                ? '0px !important'
-                : undefined,
-            width:
-              swipeConfirm.swipe.isSwiping &&
-              swipeConfirm.bul.right >= swipeConfirm.el.right
-                ? '100% !important'
-                : undefined,
-          }"
-          ref="swipeBulletElRef"
-          @mousedown="itemAction().swipeConfirmCapture()"
-        ></span>
+  {{ { modal: toValue(itemAction.data.value?.isActive) === false } }}
+  <div
+    class="action-confirmation"
+    v-if="toValue(itemAction.data.value?.isActive) === false"
+  >
+    <CompositeModalFullPage>
+      <div class="container max-w-screen-md">
+        <div class="p-4">
+          <div class="mb-4">
+            <span class="font-semibold"> Swipe to confirm action </span>
+          </div>
+          <CompositeSwipeConfirmation
+            class="max-w-[480px] mb-2"
+            @confirmed="itemAction.fn().exec()"
+          />
+          <div class="text-center">
+            <button
+              class="text-blue-400 underline"
+              @click.prevent="itemAction.fn().cancel()"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-    {{ { swipeConfirm } }}
+    </CompositeModalFullPage>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Pausable, UseIntervalControls } from "@vueuse/core";
+
 const serialNumber = useRoute().query["tag"];
 const { data: nodeData, refresh: refreshnodesData } = await useLazyFetch(
   `/api/v1.0/node/${serialNumber}` as "/api/v1.0/node/:serialNumber"
 );
 
-const clickTimeCounter = useInterval(100, { controls: true });
-clickTimeCounter.pause();
+type ItemActionFn = (label?: string) => {
+  init: () => void;
+  exec: () => void;
+  cancel: () => void;
+};
 
-const swipeElRef = useTemplateRef("swipeElRef");
-const swipeBulletElRef = useTemplateRef("swipeBulletElRef");
-const swipeConfirm = ref({
-  confirmed: false,
-  swipe: usePointerSwipe(swipeElRef, {
-    disableTextSelect: true,
-    threshold: 5,
-    onSwipeEnd(e, direction) {
-      itemAction().swipeConfirmCapture();
-    },
-  }),
-  mouse: useMouseInElement(swipeBulletElRef),
-  el: useElementBounding(swipeElRef),
-  bul: useElementBounding(swipeBulletElRef),
-});
+interface ItemAction {
+  data: globalThis.Ref<
+    (UseIntervalControls & Pausable & { itemIndex?: number }) | null
+  >;
+  fn: ItemActionFn;
+}
 
-const itemAction = (label?: string) => {
-  const init = () => {
-    clickTimeCounter.resume();
-    setTimeout(() => {
-      if (clickTimeCounter.isActive.value) {
-        itemAction();
-      }
-    }, 30000);
-  };
+const itemAction: ItemAction = {
+  data: ref(null),
+  fn: (label?: string) => {
+    const init = () => {
+      itemAction.data.value = computed(() => {
+        const findIndex = nodeData.value?.data?.items?.findIndex(
+          (node) => node?.name == label
+        );
+        console.log({ label, itemAction: findIndex });
 
-  const exec = () => {
-    const item = nodeData.value?.data?.items?.find(
-      (node) => node?.name == label
-    );
-    if (!item) return;
-    console.log({ item });
-  };
+        return typeof findIndex === "number" && findIndex >= 0
+          ? {
+              ...useInterval(100, { controls: true }),
+              itemIndex: findIndex,
+            }
+          : null;
+      }).value;
 
-  const swipeConfirmCapture = () => {
-    if (swipeConfirm.value.confirmed) return;
-    const start = () => {
-      // console.log("swipe start");
-      // console.log("distance : " + swipeConfirm.value.swipe.distanceX);
-      swipeConfirm.value.confirmed = false;
+      setTimeout(() => {
+        if (itemAction.data.value?.isActive.value) {
+          reset();
+        }
+      }, 30000);
     };
-    const end = () => {
-      // console.log("swipe end");
-      // console.log("distance : " + swipeConfirm.value.swipe.distanceX);
-      // console.log("el right : " + swipeConfirm.value.el.right);
-      // console.log("bullet right : " + swipeConfirm.value.bul.right);
-      if (swipeConfirm.value.bul.right >= swipeConfirm.value.el.right)
-        swipeConfirm.value.confirmed = true;
+
+    const exec = () => {
+      if (itemAction.data.value === null) return;
+
+      if (itemAction.data.value.isActive) return itemAction.data.value.pause();
+      console.log({ itemAction: itemAction.data.value });
+      setTimeout(() => reset(), 2000);
     };
-    if (
-      !swipeConfirm.value.mouse.isOutside &&
-      swipeConfirm.value.swipe.distanceX === 0
-    )
-      start();
-    else if (
-      !swipeConfirm.value.mouse.isOutside &&
-      swipeConfirm.value.swipe.distanceX < 0
-    )
-      end();
-  };
 
-  clickTimeCounter.pause();
-  clickTimeCounter.reset();
-  exec();
+    const cancel = () => reset();
 
-  return { init, swipeConfirmCapture };
+    const reset = () => {
+      itemAction.data.value = null;
+    };
+
+    return { init, exec, cancel };
+  },
 };
 </script>
 

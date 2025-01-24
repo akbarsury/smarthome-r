@@ -44,7 +44,8 @@ class SmarthomeStorage {
                     token,
                     name: serialNumber,
                     active: false,
-                    acceptedUsers: [uuid]
+                    acceptedUsers: [uuid],
+                    items: []
                 }
                 await this.storage.setItem(`node:${serialNumber}`, nodeStorage)
                 return nodeStorage
