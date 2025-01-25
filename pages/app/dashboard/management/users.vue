@@ -11,48 +11,46 @@
       </div>
     </div>
     <div class="mt-4">
-      <div>
+      <div
+        class="grid grid-cols-[minmax(auto,_3fr)_minmax(auto,_2fr)_minmax(auto,max-content)] gap-2"
+      >
         <div
-          class="grid grid-cols-[minmax(auto,_3fr)_minmax(auto,_2fr)_minmax(auto,max-content)] gap-2"
+          class="grid grid-cols-subgrid gap-2 col-span-3 bg-orange-100 hover:bg-orange-200 rounded p-2"
+          v-for="user in usersData?.data || []"
         >
-          <div
-            class="grid grid-cols-subgrid gap-2 col-span-3 bg-orange-100 hover:bg-orange-200 rounded p-2"
-            v-for="user in usersData?.data || []"
-          >
-            <div class="">
-              <span class="block capitalize">
-                {{ user.name || "No name" }}
-              </span>
-              <span> {{ user.email || "No email" }} </span>
-            </div>
-            <div class="place-self-center">
-              <div class="flex gap-1">
-                <div>
-                  <span class="bg-green-500 text-xs p-1 px-2 rounded-full">
-                    Verified
-                  </span>
-                </div>
-                <div>
-                  <span class="bg-yellow-500 text-xs p-1 px-2 rounded-full">
-                    admin
-                  </span>
-                </div>
+          <div class="">
+            <span class="block capitalize">
+              {{ user.name || "No name" }}
+            </span>
+            <span> {{ user.email || "No email" }} </span>
+          </div>
+          <div class="place-self-center">
+            <div class="flex gap-1">
+              <div>
+                <span class="bg-green-500 text-xs p-1 px-2 rounded-full">
+                  Verified
+                </span>
+              </div>
+              <div>
+                <span class="bg-yellow-500 text-xs p-1 px-2 rounded-full">
+                  admin
+                </span>
               </div>
             </div>
-            <div class="content-center">
-              <div class="flex gap-2">
-                <button
-                  class="bg-blue-400 hover:bg-blue-600 border-blue-600 rounded p-1 px-2"
-                >
-                  Edit
-                </button>
-                <button
-                  class="bg-red-400 hover:bg-red-600 border-red-600 rounded p-1 px-2"
-                  @click.prevent="deleteUser.open(user.id)"
-                >
-                  Delete
-                </button>
-              </div>
+          </div>
+          <div class="content-center">
+            <div class="flex gap-2">
+              <button
+                class="bg-blue-400 hover:bg-blue-600 border-blue-600 rounded p-1 px-2"
+              >
+                Edit
+              </button>
+              <button
+                class="bg-red-400 hover:bg-red-600 border-red-600 rounded p-1 px-2"
+                @click.prevent="deleteUser.open(user.id)"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@
           v-for="node in nodesData?.data as Apis.Nodes.Node[] || []"
         >
           <NuxtLink
-            class="block bg-orange-100 hover:text-orange-700 border border-transparent hover:border-orange-200 rounded p-4"
+            class="block bg-orange-100 hover:bg-orange-200 hover:text-orange-700 border border-orange-400 rounded p-4"
             :to="{
               name: 'app-dashboard-nodes',
               query: { tag: node.serialNumber },
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-const { data: nodesData, refresh: refreshnodesData } = await useFetch(
+const { data: nodesData, refresh: refreshnodesData } = await useLazyFetch(
   "/api/v1.0/node/nodes"
 );
 

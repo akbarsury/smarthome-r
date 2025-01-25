@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
     if (!session) return generateApiResponse<undefined>(event, { statusCode: 401 })
     const isManagement = getRequestHeader(event, 'referer')?.endsWith('/dashboard/management/nodes')
     const nodes = (await (await useSmarthome().storage.nodes().get({ activeOnly: !isManagement })).withValue()).map((node) => {
-        return isManagement ? { ...node } : { ...node, active: undefined, acceptedUsers: undefined, items: undefined }
+        return isManagement ? { ...node, acceptedUsers: undefined, items: undefined } : { ...node, active: undefined, acceptedUsers: undefined, items: undefined }
     })
     return generateApiResponse<typeof nodes>(event, {
         statusCode: 200,

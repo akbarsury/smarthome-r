@@ -13,7 +13,50 @@
       </div>
       <div class="mt-4">
         <div>
-          <div>{{ { nodesData } }}</div>
+          <div
+            class="grid grid-cols-[minmax(auto,_3fr)_minmax(auto,_2fr)_minmax(auto,max-content)] gap-2"
+          >
+            <div
+              class="grid grid-cols-subgrid gap-2 col-span-3 bg-orange-100 hover:bg-orange-200 rounded p-2"
+              v-for="node in nodesData?.data as Apis.Nodes.Node[] || []"
+            >
+              <div class="">
+                <span class="block capitalize">
+                  {{ node.name || "No name" }}
+                </span>
+              </div>
+              <div class="place-self-center">
+                <div class="flex gap-1">
+                  <div>
+                    <span
+                      :class="[
+                        'text-xs p-1 px-2 rounded-full',
+                        node.active ? 'bg-green-500' : 'bg-neutral-400',
+                      ]"
+                    >
+                      {{ node.active ? "active" : "inactive" }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="content-center">
+                <div class="flex gap-2">
+                  <button
+                    class="bg-blue-400 hover:bg-blue-600 border-blue-600 rounded p-1 px-2"
+                    @click.prevent=""
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="bg-red-400 hover:bg-red-600 border-red-600 rounded p-1 px-2"
+                    @click.prevent=""
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

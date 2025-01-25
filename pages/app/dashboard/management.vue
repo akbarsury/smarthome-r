@@ -1,13 +1,13 @@
 <template>
   <div>
     <div
-      class="grid grid-cols-[auto_1fr] border border-orange-200 rounded-xl p-2 px-4"
+      class="grid grid-cols-[auto_1fr] border border-orange-400 rounded-xl p-2 px-4"
     >
       <div class="min-w-[78px]">
         <ul>
           <li>
             <NuxtLink
-              class="hover:underline"
+              class="hover:text-orange-500 hover:underline"
               :to="{ name: 'app-dashboard-management-users' }"
             >
               User Management
@@ -15,7 +15,7 @@
           </li>
           <li>
             <NuxtLink
-              class="hover:underline"
+              class="hover:text-orange-500 hover:underline"
               :to="{ name: 'app-dashboard-management-nodes' }"
             >
               Node Management
@@ -24,7 +24,7 @@
         </ul>
       </div>
       <div
-        class="relative overflow-hidden pl-2 ml-4 border-s border-orange-200"
+        class="relative overflow-hidden pl-2 ml-4 border-s border-orange-400"
       >
         <NuxtPage
           class="relative right-0 w-full h-full"

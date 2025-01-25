@@ -12,12 +12,9 @@
       >
     </div>
   </div>
-  <div>
-    {{ { itemAction: itemAction.data.value || null } }}
-  </div>
   <div class="flex flex-wrap gap-2" v-if="nodeData?.data?.items">
     <div
-      class="node-item min-w-72 basis-full sm:basis-[calc(50%_-_0.25rem)] border border-neutral-400 rounded p-4"
+      class="node-item min-w-72 basis-full sm:basis-[calc(50%_-_0.25rem)] border border-orange-400 rounded p-4"
       v-for="nodeItem in nodeData?.data?.items?.filter(
         (nodeItem) => nodeItem !== null
       ) || []"
@@ -84,7 +81,6 @@
       </div>
     </div>
   </div>
-  {{ { modal: toValue(itemAction.data.value?.isActive) === false } }}
   <div
     class="action-confirmation"
     v-if="toValue(itemAction.data.value?.isActive) === false"
