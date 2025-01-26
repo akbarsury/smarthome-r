@@ -12,7 +12,6 @@ type RequestHandlerResponse = {
     }
 }
 
-
 export class RequestHandler {
 
     constructor(event: H3Event) {

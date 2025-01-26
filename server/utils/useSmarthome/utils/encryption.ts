@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 
-export default () => {
+export const encryption = () => {
     const encrypt = (text: string, key: string) => {
         let encryptedText: string | undefined = undefined
         try {
@@ -31,3 +31,5 @@ export default () => {
 
     return { encrypt, decrypt }
 }
+
+export default encryption
