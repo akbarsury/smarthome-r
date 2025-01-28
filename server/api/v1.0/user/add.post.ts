@@ -12,11 +12,11 @@ export default defineEventHandler(async (event) => {
     const user = await useSmarthome().storage.user().add({ email, password, name })
     return generateApiResponse(event, {
         message: user ? "Success create user" : "Failed create user",
-        data: [user].map<apis.users.IUser>((user) => {
+        data: [user].map<Apis.Users.User>((user) => {
             return {
-                id: user.uid,
-                email: user.email || null,
-                name: user.displayName || null
+                id: user.uid || "NULL",
+                email: user.email || "NULL",
+                name: user.displayName || "NULL"
             }
         })[0]
     })

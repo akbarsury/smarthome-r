@@ -44,6 +44,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "@sidebase/nuxt-auth",
     "@vueuse/nuxt",
+    "@vee-validate/nuxt"
   ],
   css: [
     fileURLToPath(new URL("./resources/styles/scss/main.scss", import.meta.url)).toString()
@@ -148,4 +149,13 @@ export default defineNuxtConfig({
       enableOnWindowFocus: true,
     }
   },
+  veeValidate: {
+    autoImports: true,
+    componentNames: {
+      Form: "VForm",
+      Field: "VField",
+      FieldArray: "VFieldArray",
+      ErrorMessage: "VErrorMessage"
+    }
+  }
 })

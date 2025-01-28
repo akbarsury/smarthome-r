@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-const { data: nodesData, refresh: refreshnodesData } = await useLazyFetch(
+const { data: nodesData, refresh: refreshnodesData } = await useApiFetch(
   "/api/v1.0/node/nodes"
 );
 

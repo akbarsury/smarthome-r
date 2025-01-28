@@ -1,62 +1,71 @@
 <template>
-  <div
-    :class="[
-      'max-w-screen-md mx-auto min-h-screen grid',
-      $route.name !== 'home' && !$route.name?.toString().startsWith('app-auth-')
-        ? 'grid-rows-[auto_1fr]'
-        : 'grid-rows-[1fr]',
-    ]"
-  >
+  <div>
     <div
-      class="container h-fit"
-      v-if="
+      class="fixed h-screen w-screen bg-neutral-50 z-[1000]"
+      v-if="loadingAppDelay"
+    >
+      <CompositeLoadingApp />
+    </div>
+    <div
+      :class="[
+        'max-w-screen-md mx-auto min-h-screen grid',
         $route.name !== 'home' &&
         !$route.name?.toString().startsWith('app-auth-')
-      "
+          ? 'grid-rows-[auto_1fr]'
+          : 'grid-rows-[1fr]',
+      ]"
     >
-      <div class="px-4 mt-2">
-        <div class="bg-orange-200 rounded p-2 py-4">
-          <div class="flex justify-between">
-            <div>
-              <NuxtLink :to="{ name: 'app-dashboard' }">
-                <h1 class="text-orange-700 text-2xl font-bold">
-                  Smarthome Assistant
-                </h1>
-              </NuxtLink>
-            </div>
-            <div v-if="!$route.name?.toString().startsWith('auth')">
-              <div class="flex gap-2" v-if="authStatus === 'authenticated'">
-                <div>
-                  <NuxtLink
-                    :to="{ name: 'app-dashboard-nodes' }"
-                    class="inline-block bg-green-300 hover:bg-green-400 border border-green-500 p-1 px-3 rounded"
-                  >
-                    Nodes
-                  </NuxtLink>
-                </div>
-                <div>
-                  <NuxtLink
-                    :to="{ name: 'app-dashboard-management' }"
-                    class="inline-block bg-green-300 hover:bg-green-400 border border-green-500 p-1 px-3 rounded"
-                  >
-                    Manajement
-                  </NuxtLink>
-                </div>
-                <div>
-                  <button
-                    class="bg-orange-300 hover:bg-orange-400 border border-orange-500 p-1 px-3 rounded"
-                    @click.prevent="signOut()"
-                  >
-                    Sign out
-                  </button>
+      <div
+        class="container h-fit"
+        v-if="
+          $route.name !== 'home' &&
+          !$route.name?.toString().startsWith('app-auth-')
+        "
+      >
+        <div class="px-4 mt-2">
+          <div class="bg-orange-200 rounded p-2 py-4">
+            <div class="flex justify-between">
+              <div>
+                <NuxtLink :to="{ name: 'app-dashboard' }">
+                  <h1 class="text-orange-700 text-2xl font-bold">
+                    Smarthome Assistant
+                  </h1>
+                </NuxtLink>
+              </div>
+              <div v-if="!$route.name?.toString().startsWith('auth')">
+                <div class="flex gap-2" v-if="authStatus === 'authenticated'">
+                  <div>
+                    <NuxtLink
+                      :to="{ name: 'app-dashboard-nodes' }"
+                      class="inline-block bg-green-300 hover:bg-green-400 border border-green-500 p-1 px-3 rounded"
+                    >
+                      Nodes
+                    </NuxtLink>
+                  </div>
+                  <div>
+                    <NuxtLink
+                      :to="{ name: 'app-dashboard-management' }"
+                      class="inline-block bg-green-300 hover:bg-green-400 border border-green-500 p-1 px-3 rounded"
+                    >
+                      Manajement
+                    </NuxtLink>
+                  </div>
+                  <div>
+                    <button
+                      class="bg-orange-300 hover:bg-orange-400 border border-orange-500 p-1 px-3 rounded"
+                      @click.prevent="signOut()"
+                    >
+                      Sign out
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <slot />
     </div>
-    <slot />
   </div>
 </template>
 
@@ -69,6 +78,11 @@ const signOut = () => {
     navigateTo({ name: "home" });
   });
 };
+
+const loadingAppDelay = ref(true);
+onMounted(() => {
+  setTimeout(() => (loadingAppDelay.value = false), 1500);
+});
 </script>
 
 <style scoped></style>

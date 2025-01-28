@@ -46,11 +46,11 @@ export const useWsStore = defineStore('ws', () => {
     const init = async () => {
         if (user) {
             const initStatus = setInterval(async () => {
-                const { data, status } = await useFetch('/init')
+                const { _value, status } = await useApiFetch('/init')
                 if (status.value == 'success') {
                     console.log(status.value);
                     const token = useCookie('us_token')
-                    token.value = data.value?.token || ''
+                    token.value = _value.value?.token || ''
                     console.log({ token: token.value });
                     webSocket.connect(token.value)
                     clearInterval(initStatus)

@@ -113,7 +113,7 @@
 import type { Pausable, UseIntervalControls } from "@vueuse/core";
 
 const serialNumber = useRoute().query["tag"];
-const { data: nodeData, refresh: refreshnodesData } = await useLazyFetch(
+const { _value: nodeData, refresh: refreshnodesData } = await useApiFetch(
   `/api/v1.0/node/${serialNumber}` as "/api/v1.0/node/:serialNumber"
 );
 
