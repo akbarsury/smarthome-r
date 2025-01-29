@@ -1,11 +1,10 @@
-
-import { defineStore } from 'pinia';
-import z from 'zod';
+import { z } from "zod";
+import { type FormsSchema } from ".";
 
 const userRule = ["admin", "user"] as const
 const nodeItemType = ["switch", "push"] as const
 
-const validationSchema = {
+export const formsSchema = {
     addUser: {
         email: z.string().email().nonempty().default(""),
         name: z.string().nonempty().default(""),
@@ -50,17 +49,3 @@ const validationSchema = {
         }).array()
     },
 }
-
-export const useManagementForm = defineStore('management-form', () => {
-    const addUser = () => new UseForm(validationSchema.addUser)
-    const editUser = () => new UseForm(validationSchema.editUser)
-    const changeUserPassword = () => new UseForm(validationSchema.changeUserPassword)
-
-    return {
-        addUser,
-        editUser,
-        changeUserPassword
-    }
-});
-
-

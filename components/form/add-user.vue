@@ -2,24 +2,20 @@
   <ClientOnly>
     <div class="flex flex-col" v-for="(form, label) in fields">
       <div>
-        <label :for="`${label}`">{{ label }}</label>
-        <input :name="`${label}`" :id="`${label}`" v-model="form.val" />
+        <label :for="label">{{ label }}</label>
+        <input :name="label" :id="label" v-model="form.val" />
       </div>
     </div>
   </ClientOnly>
   <button class="p-1 border border-orange-800" @click="form.validate()">
     Validate
   </button>
-  <pre> {{ { name_, nameAtt_ } }}</pre>
-  <div class="flex">
+  <div class="flex p-2">
     <div class="basis border border-orange-800">
       <pre> {{ { errors: form.errors } }}</pre>
     </div>
     <div class="basis border border-orange-800">
       <pre> {{ { values: form.values } }}</pre>
-    </div>
-    <div class="basis border border-orange-800">
-      <pre> {{ { keys } }}</pre>
     </div>
     <div class="basis border border-orange-800">
       <pre>{{ { fields } }} </pre>
@@ -99,8 +95,7 @@
 </template>
 
 <script setup lang="ts">
-const { useField, keys, form, fields } = useManagementForm().form("addUser");
-const [name_, nameAtt_] = useField("name");
+const { useField, form, fields } = useManagementForm().addUser();
 </script>
 
 <style scoped></style>
