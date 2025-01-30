@@ -37,4 +37,4 @@ const useSmarthome = () => {
     return { encryption, storage, requestHandler, getBearer, unit, getControlledItems, webSocket }
 }
 
-export default useSmarthome
+export { useSmarthome, useSmarthome as default }

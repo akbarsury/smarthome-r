@@ -5,7 +5,7 @@ import z from 'zod';
 const userRule = ["admin", "user"] as const
 const nodeItemType = ["switch", "push"] as const
 
-const validationSchema = {
+export const validationSchema = {
     addUser: {
         email: z.string().email().nonempty().default(""),
         name: z.string().nonempty().default(""),
@@ -52,9 +52,9 @@ const validationSchema = {
 }
 
 export const useManagementForm = defineStore('management-form', () => {
-    const addUser = () => new UseForm(validationSchema.addUser)
-    const editUser = () => new UseForm(validationSchema.editUser)
-    const changeUserPassword = () => new UseForm(validationSchema.changeUserPassword)
+    const addUser = () => new UseForm("add user", validationSchema.addUser)
+    const editUser = () => new UseForm("edit user", validationSchema.editUser)
+    const changeUserPassword = () => new UseForm("change user password", validationSchema.changeUserPassword)
 
     return {
         addUser,

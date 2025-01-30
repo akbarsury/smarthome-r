@@ -159,7 +159,6 @@
 </template>
 
 <script setup lang="ts">
-type AnyString = string;
 type NodeManagement = {
   nodes: Apis.Nodes.Node[];
   form: {
@@ -175,6 +174,7 @@ type NodeManagement = {
     closeForm: () => void;
   };
 };
+
 const nodeManagement: NodeManagement = reactive({
   nodes: [],
   form: {},

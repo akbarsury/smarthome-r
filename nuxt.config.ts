@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     }
   },
   devServer: {
+    host: "10.181.80.1",
     port: 6051
   },
   runtimeConfig: {
