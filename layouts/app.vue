@@ -9,8 +9,8 @@
     <div
       :class="[
         'max-w-screen-md mx-auto min-h-screen grid',
-        $route.name !== 'home' &&
-        !$route.name?.toString().startsWith('app-auth-')
+        $router.currentRoute.value.name !== 'home' &&
+        !$router.currentRoute.value.name?.toString().startsWith('app-auth-')
           ? 'grid-rows-[auto_1fr]'
           : 'grid-rows-[1fr]',
       ]"
@@ -18,12 +18,12 @@
       <div
         class="container h-fit"
         v-if="
-          $route.name !== 'home' &&
-          !$route.name?.toString().startsWith('app-auth-')
+          $router.currentRoute.value.name !== 'home' &&
+          !$router.currentRoute.value.name?.toString().startsWith('app-auth-')
         "
       >
         <div class="px-4 mt-2">
-          <div class="bg-orange-200 rounded p-2 py-4">
+          <div class="bg-orange-200 rounded p-4">
             <div class="flex justify-between">
               <div>
                 <NuxtLink :to="{ name: 'app-dashboard' }">
@@ -32,30 +32,38 @@
                   </h1>
                 </NuxtLink>
               </div>
-              <div v-if="!$route.name?.toString().startsWith('auth')">
+              <div
+                v-if="
+                  !$router.currentRoute.value.name
+                    ?.toString()
+                    .startsWith('auth')
+                "
+              >
                 <div class="flex gap-2" v-if="authStatus === 'authenticated'">
                   <div>
                     <NuxtLink
                       :to="{ name: 'app-dashboard-nodes' }"
-                      class="inline-block bg-green-300 hover:bg-green-400 border border-green-500 p-1 px-3 rounded"
+                      class="inline-block bg-orange-200 hover:bg-orange-300 border border-orange-400 p-1 px-3 rounded"
                     >
                       Nodes
                     </NuxtLink>
                   </div>
                   <div>
                     <NuxtLink
-                      :to="{ name: 'app-dashboard-management' }"
-                      class="inline-block bg-green-300 hover:bg-green-400 border border-green-500 p-1 px-3 rounded"
+                      :to="{ name: 'app-dashboard-management-users' }"
+                      class="inline-block bg-orange-200 hover:bg-orange-300 border border-orange-400 p-1 px-3 rounded"
                     >
                       Manajement
                     </NuxtLink>
                   </div>
                   <div>
                     <button
-                      class="bg-orange-300 hover:bg-orange-400 border border-orange-500 p-1 px-3 rounded"
+                      class="hover:bg-orange-300 border border-transparent hover:border-orange-400 p-1 px-1 rounded-full"
                       @click.prevent="signOut()"
                     >
-                      Sign out
+                      <div class="h-[1.5rem]">
+                        <Icon name="uil:signout" size="1.5rem" />
+                      </div>
                     </button>
                   </div>
                 </div>

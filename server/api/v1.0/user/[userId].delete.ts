@@ -1,5 +1,5 @@
 export default defineEventHandler(async (event) => {
-    const { session } = await useSmarthome().requestHandler(event).exec('user')
+    const { session } = await useSmarthome().requestHandler(event).exec('app-client')
     if (!session) return setResponseStatus(event, 401, "Unauthorized")
     const id = getRouterParam(event, "userId")
     if (!id) return setResponseStatus(event, 400, "Bad Request")

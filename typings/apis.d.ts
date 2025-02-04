@@ -3,11 +3,10 @@ namespace Apis {
         type User = {
             id: string,
             email: string,
-            name: string
-        }
-        type NewUser = {
-            email: string,
             name: string,
+            rule: string
+        }
+        type NewUser = Apis.Users.user & {
             password: string,
         }
     }

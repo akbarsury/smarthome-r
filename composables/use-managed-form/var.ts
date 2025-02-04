@@ -28,7 +28,7 @@ export const formsSchema = {
     editNode: {
         serialNumber: z.string().nonempty().default(""),
         name: z.string().nonempty().default(""),
-        activeStatus: z.boolean().default(false)
+        active: z.boolean().default(false)
     },
     addNodeItems: {
         serialNumber: z.string().nonempty().default(""),

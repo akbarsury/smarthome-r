@@ -1,10 +1,13 @@
 <template>
   <div class="dashboard">
-    <div class="management m-4" v-if="$route.name !== 'app-dashboard'">
+    <div
+      class="management m-4"
+      v-if="$router.currentRoute.value.name !== 'app-dashboard'"
+    >
       <ClientOnly>
         <div class="mb-4">
           <h6 class="text-neutral-700 capitalize font-semibold">
-            {{ $route.path.split("/")[2] }}
+            {{ $router.currentRoute.value.path.split("/")[2] }}
           </h6>
         </div>
         <NuxtPage />

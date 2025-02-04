@@ -2,7 +2,7 @@
   <div class="container px-4">
     <div class="controller-wrapper">
       <div class="flex flex-col gap-6 py-4">
-        {{ { routeName: $route.name, unitName } }}
+        {{ { routeName: $router.currentRoute.value.name, unitName } }}
         <ControlItemDevices :unit-name="unitName" v-if="unitName" />
         <NuxtPage v-else />
       </div>

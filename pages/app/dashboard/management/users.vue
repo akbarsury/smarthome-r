@@ -1,10 +1,10 @@
 <template>
   <div class="user-management">
     <div class="flex justify-end">
-      <div class="mt-2">
+      <div class="pt-2">
         <button
-          class="bg-blue-600 text-neutral-50 rounded p-1 px-2"
-          @click.prevent="() => addUser.open()"
+          class="bg-blue-500 hover:bg-blue-700 text-neutral-50 rounded p-1 px-2"
+          @click.prevent="userBind.set('add')"
         >
           Add User
         </button>
@@ -16,7 +16,7 @@
       >
         <div
           class="grid grid-cols-subgrid gap-2 col-span-3 bg-orange-100 hover:bg-orange-200 rounded p-2"
-          v-for="user in usersData?.data || []"
+          v-for="user in usersData?.data?.filter((user) => user !== null) as Apis.Users.User[] || []"
         >
           <div class="">
             <span class="block capitalize">
@@ -42,12 +42,13 @@
             <div class="flex gap-2">
               <button
                 class="bg-blue-400 hover:bg-blue-600 border-blue-600 rounded p-1 px-2"
+                @click.prevent="userBind.set('edit', user)"
               >
                 Edit
               </button>
               <button
                 class="bg-red-400 hover:bg-red-600 border-red-600 rounded p-1 px-2"
-                @click.prevent="deleteUser.open(user.id)"
+                @click.prevent="userBind.set('delete', user)"
               >
                 Delete
               </button>
@@ -56,96 +57,53 @@
         </div>
       </div>
     </div>
-    <div class="add-user" v-if="addUser.meta.status">
-      <CompositeModalFullPage @click-outside="addUser.close()">
-        <div class="min-w-[320px]">
-          <div class="p-2">
-            <div class="mb-4">
-              <h3 class="text-lg font-bold text-center">Add new user</h3>
+    <div class="user-action-modal" v-if="userBind.action">
+      <div class="add-user" v-if="userBind.action === 'add'">
+        <CompositeModalFullPage>
+          <div class="min-w-[320px]">
+            <div class="p-2">
+              <div class="mb-4">
+                <h3 class="text-lg font-bold text-center">Add new user</h3>
+              </div>
+              <FormAddUser
+                @cancel="userBind.reset()"
+                @success="refreshUsersData()"
+              />
             </div>
-            <FormAddUser @cancel="addUser.close()" />
           </div>
-        </div>
-      </CompositeModalFullPage>
-    </div>
-    <div class="user-action-modal">
-      <div class="delete-user" v-if="deleteUser.meta.status">
-        <CompositeModalFullPage @click-outside="deleteUser.close()">
+        </CompositeModalFullPage>
+      </div>
+      <div class="edit-user" v-if="userBind.action === 'edit' && userBind.user">
+        <CompositeModalFullPage>
+          <div class="min-w-[320px]">
+            <div class="p-2">
+              <div class="mb-4">
+                <h3 class="text-lg font-bold text-center">Edit user</h3>
+              </div>
+              <FormEditUser
+                :user="userBind.user"
+                @cancel="userBind.reset()"
+                @success="refreshUsersData()"
+              />
+            </div>
+          </div>
+        </CompositeModalFullPage>
+      </div>
+      <div
+        class="delete-user"
+        v-if="userBind.action === 'delete' && userBind.user"
+      >
+        <CompositeModalFullPage>
           <div class="min-w-[320px]">
             <div class="p-2">
               <div class="mb-4">
                 <h3 class="text-lg font-bold text-center">Delete user</h3>
               </div>
-              <div class="flex flex-col gap-4">
-                <div class="" v-if="!deleteUser.meta.status.startsWith('done')">
-                  <span class="block mb-2">Are you sure to delete user ?</span>
-                  <div
-                    class="user-information border border-blue-400 rounded p-2"
-                  >
-                    <span class="text-red-500 font-semibold border-b">
-                      User Information
-                    </span>
-                    <div>
-                      <span class="inline-block w-[48px]">Name</span>
-                      <span class="capitalize"
-                        >:
-                        {{
-                          usersData?.data?.find(
-                            (user) => user.id === deleteUser.data.userId
-                          )?.name
-                        }}</span
-                      >
-                    </div>
-                    <div>
-                      <span class="inline-block w-[48px]">Email</span>
-                      <span
-                        >:
-                        {{
-                          usersData?.data?.find(
-                            (user) => user.id === deleteUser.data.userId
-                          )?.email
-                        }}</span
-                      >
-                    </div>
-                  </div>
-                </div>
-                <div class="delete-user-status" v-else>
-                  <div
-                    :class="[
-                      'rounded p-2 px-4',
-                      deleteUser.meta.status === 'done:failed'
-                        ? 'bg-red-300'
-                        : 'bg-green-300',
-                    ]"
-                  >
-                    {{ deleteUser.meta.message }}
-                  </div>
-                </div>
-                <div class="delete-user-action flex justify-end gap-2">
-                  <button
-                    :class="[
-                      'border p-1 px-3 rounded',
-                      deleteUser.meta.status != 'waiting'
-                        ? 'bg-red-300 hover:bg-red-400 border-red-500'
-                        : 'bg-neutral-400 pointer-events-none',
-                    ]"
-                    @click.prevent="deleteUser.close()"
-                  >
-                    cancel
-                  </button>
-                  <button
-                    :class="[
-                      'border p-1 px-3 rounded',
-                      deleteUser.meta.status != 'waiting'
-                        ? 'bg-orange-300 hover:bg-orange-400 border-orange-500'
-                        : 'bg-neutral-400 pointer-events-none',
-                    ]"
-                    @click.prevent="deleteUser.exec()"
-                  >
-                    Delete User
-                  </button>
-                </div>
-              </div>
+              <FormDeleteUser
+                :user="userBind.user"
+                @cancel="userBind.reset()"
+                @success="refreshUsersData()"
+              />
             </div>
           </div>
         </CompositeModalFullPage>
@@ -159,111 +117,22 @@ const { _value: usersData, refresh: refreshUsersData } = await useApiFetch(
   "/api/v1.0/user/users"
 );
 
-const addUser: {
-  data: {
-    newUser: { name?: string; email?: string; password?: string };
-  };
-  meta: {
-    status?: "bind" | "waiting" | "done:failed" | "done:success";
-    message?: string;
-  };
-  open: () => void;
-  close: () => void;
-  exec: () => void;
-} = reactive({
-  data: { newUser: {} },
-
-  meta: {},
-
-  open: () => {
-    addUser.meta.status = "bind";
+const userBind: globalThis.Ref<{
+  action?: "add" | "edit" | "delete";
+  user?: Apis.Users.User;
+  readonly set: (
+    action: "add" | "edit" | "delete",
+    user?: Apis.Users.User
+  ) => void;
+  readonly reset: () => void;
+}> = ref({
+  set: (action, user) => {
+    userBind.value.action = action;
+    userBind.value.user = user;
   },
-
-  close: () => {
-    addUser.meta = {};
-    addUser.data = { newUser: {} };
-  },
-
-  exec: async () => {
-    addUser.meta.status = "waiting";
-    const { data: addUserData, errors: addUserErrors } = await $fetch(
-      "/api/v1.0/user/add",
-      {
-        method: "post",
-        body: addUser.data.newUser,
-      }
-    );
-
-    if (addUserData) {
-      addUser.meta = {
-        status: addUserErrors ? "done:success" : "done:failed",
-        message: addUserErrors?.toString(),
-      };
-      addUser.data.newUser = addUserData ? {} : addUser.data.newUser;
-    }
-
-    if (addUser.meta.status === "done:success") {
-      await refreshUsersData();
-    }
-
-    setTimeout(async () => {
-      addUser.close();
-    }, 3000);
-  },
-});
-
-const deleteUser: {
-  data: {
-    userId?: string;
-  };
-  meta: {
-    status?: "bind" | "waiting" | "done:failed" | "done:success";
-    message?: string;
-  };
-  open: (id: string) => void;
-  close: () => void;
-  exec: () => void;
-} = reactive({
-  data: {},
-
-  meta: {},
-
-  open: (id: string) => {
-    deleteUser.data.userId = usersData.value?.data?.find(
-      (user) => user.id === id
-    )?.id;
-    if (deleteUser.data.userId) {
-      deleteUser.meta.status = "bind";
-    }
-  },
-
-  close: () => {
-    deleteUser.meta = {};
-    deleteUser.data = {};
-  },
-
-  exec: async () => {
-    deleteUser.meta.status = "waiting";
-    const { data: deleteUserData } = await $fetch(
-      `/api/v1.0/user/${deleteUser.data.userId}` as "/api/v1.0/user/:userId",
-      { method: "delete" }
-    );
-
-    if (deleteUserData) {
-      deleteUser.meta = {
-        status: deleteUserData?.userId ? "done:success" : "done:failed",
-        // message: deleteUserResult.value.message,
-      };
-      deleteUser.data = {};
-    }
-
-    if (deleteUser.meta.status === "done:success") {
-      await refreshUsersData();
-    }
-
-    setTimeout(async () => {
-      deleteUser.close();
-    }, 3000);
+  reset: () => {
+    userBind.value.action = undefined;
+    userBind.value.user = undefined;
   },
 });
 </script>

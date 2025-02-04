@@ -1,7 +1,7 @@
 import { getServerSession } from '#auth';
 import type { H3Event } from 'h3';
 import { Session } from 'next-auth';
-type RequestHandlerType = "user" | "node"
+type RequestHandlerType = "app-client" | "node"
 
 type RequestHandlerResponse = {
     statusCode?: 200 | 400 | 401,
@@ -22,7 +22,7 @@ export class RequestHandler {
     private response: RequestHandlerResponse = {}
 
     exec = async (handlerType: RequestHandlerType) => {
-        if (handlerType === 'user') {
+        if (handlerType === 'app-client') {
             const session = await getServerSession(this.event)
             const isSessionNotExpires = session ? new Date(session.expires).getTime() > new Date().getTime() : false
             this.response = session && isSessionNotExpires ? { statusCode: 200, message: 'authorized', session } : { statusCode: 401, message: 'unauthorized' }

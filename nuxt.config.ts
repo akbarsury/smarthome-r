@@ -7,6 +7,11 @@ export default defineNuxtConfig({
   devtools: {
     enabled: true
   },
+  vite: {
+    server: {
+      allowedHosts: ["arahhost", "app.arahhost"]
+    }
+  },
   nitro: {
     experimental: {
       websocket: true,
@@ -146,7 +151,7 @@ export default defineNuxtConfig({
       addDefaultCallbackUrl: false,
     },
     sessionRefresh: {
-      enablePeriodically: 60000,
+      enablePeriodically: 600000,
       enableOnWindowFocus: true,
     }
   },

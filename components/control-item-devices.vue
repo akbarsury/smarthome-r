@@ -34,7 +34,7 @@
     </div>
     <CompositeSelectedItemDevice
       v-if="
-        $route.query['device'] &&
+        $router.currentRoute.value.query['device'] &&
         controlledItems &&
         controlledItems.length !== 0 &&
         selectedItemDevice !== -111

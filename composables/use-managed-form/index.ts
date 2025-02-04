@@ -1,17 +1,13 @@
-import { useForm as veeUseForm, useField as veeUseField, type BaseFieldProps, type GenericObject } from 'vee-validate'
-import type { UnwrapNestedRefs } from 'vue';
+import { useForm as veeUseForm, type BaseFieldProps, type GenericObject, type Path, type PathValue } from 'vee-validate'
+import { computed, ref, type UnwrapNestedRefs } from 'vue';
 import z, { type ZodType } from 'zod';
 
 export type FormsSchema = Record<string, FormSchema>
-type FormSchema = Record<string, ZodType>
-
-type AnyProps<
-    T = Record<string, any>,
-    _AnyProps = T extends Record<Exclude<string, "focus">, any> ? T : unknown
-> = _AnyProps
+type FormSchema = z.ZodRawShape
 
 type FieldObj<
-    TVal extends globalThis.Ref<string | number | boolean> = globalThis.Ref<string>,
+    T,
+    TVal extends globalThis.Ref<T> = globalThis.Ref<T>,
     TBind extends ManagedFormFieldDefaultProps["bind"] = ManagedFormFieldDefaultProps["bind"],
     TProps extends ManagedFormFieldDefaultProps["props"] = ManagedFormFieldDefaultProps["props"],
     TErr extends globalThis.ComputedRef<string[]> = globalThis.ComputedRef<string[]>
@@ -21,11 +17,6 @@ type FieldObj<
     props: TProps,
     errors: TErr
 }
-
-// class ManagedFormFieldProps<
-//     T extends Record<string, any> = Record<string, any>,
-//     _T = T extends Record<Exclude<string, "focus">, any> ? AnyProps<T> : AnyProps<unknown>
-// > implements BaseFieldProps { }
 
 class ManagedFormFieldDefaultProps<T extends (BaseFieldProps & GenericObject) = BaseFieldProps & GenericObject> {
     constructor(props: T) {
@@ -74,16 +65,16 @@ export class ManagedForm<
 
 export class UseForm<
     S extends FormSchema = FormSchema,
-    KeyOfS extends keyof S = keyof S,
-    Fields extends object = Record<KeyOfS, FieldObj>
+    KeyOfS extends keyof S | string = S extends FormSchema ? keyof S : string,
+    G extends GenericObject = Record<keyof S, z.infer<S[keyof S]>>,
+    Fields extends object = Record<KeyOfS, FieldObj<G[keyof G]>>
 > {
-
     constructor(private name: string, schema: S, anyOptions?: Omit<Parameters<typeof useForm>, "name" | "validationSchema">) {
         this.fieldKeys = Object.keys(schema) as KeyOfS[]
-        this.form = useForm({ name, validationSchema: toTypedSchema(z.object(schema)), ...anyOptions })
+        this.form = useForm<G>({ name, validationSchema: toTypedSchema(z.object(schema)), ...anyOptions })
         Object.assign(this.fields, Object.fromEntries((this.fieldKeys).map((key) => {
-            let [val, attr] = this.useField(key)
-            let errors = computed(() => (this.form as ReturnType<typeof useForm>).errorBag.value[key as string])
+            let [val, attr] = this.useField(key) as [globalThis.Ref<PathValue<G, G[keyof G]>, PathValue<G, G[keyof G]>>, globalThis.Ref<BaseFieldProps & G, BaseFieldProps & G>]
+            let errors = computed(() => (this.form as ReturnType<typeof useForm<G>>).errorBag.value[key as unknown as Path<G>])
             return [key, {
                 val,
                 ...(new ManagedFormFieldDefaultProps({ ...toValue(attr) })),
@@ -94,9 +85,9 @@ export class UseForm<
 
     // property
     private fieldKeys: KeyOfS[]
-    form: Omit<ReturnType<typeof useForm>, "meta" | "values" | "errors" | "errorBag" | "controlledValues">
-    meta = computed(() => (this.form as ReturnType<typeof useForm>).meta.value)
-    values = computed(() => (this.form as ReturnType<typeof useForm>).values)
+    form: Omit<ReturnType<typeof useForm<G>>, "meta" | "values" | "errors" | "errorBag" | "controlledValues">
+    meta = computed(() => (this.form as ReturnType<typeof useForm<G>>).meta.value)
+    values = computed(() => (this.form as ReturnType<typeof useForm<G>>).values)
     isValid = computed(() => this.meta.value.valid)
     fields: UnwrapNestedRefs<Fields> = reactive({} as Fields)
 
