@@ -27,12 +27,12 @@
           <div class="place-self-center">
             <div class="flex gap-1">
               <div>
-                <span class="bg-green-500 text-xs p-1 px-2 rounded-full">
+                <span class="block bg-green-500 text-xs p-1 px-2 rounded-full">
                   Verified
                 </span>
               </div>
               <div>
-                <span class="bg-yellow-500 text-xs p-1 px-2 rounded-full">
+                <span class="block bg-yellow-500 text-xs p-1 px-2 rounded-full">
                   admin
                 </span>
               </div>

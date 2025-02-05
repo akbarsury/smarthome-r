@@ -27,18 +27,18 @@ export const validationSchema = {
         newPassword: z.string().nonempty("password baru tidak boleh kosong").min(8, "password baru minimal berisi 8 karakter").max(20, "password baru maksimal berisi 20 karakter").default(""),
     },
     addNode: {
-        serialNumber: z.string().nonempty("serial number tidak boleh kosong").default(""),
+        nodeId: z.string().nonempty("serial number tidak boleh kosong").default(""),
         name: z.string().nonempty("nama tidak boleh kosong").default("")
     },
     editNode: {
-        serialNumber: z.string().nonempty("serial number tidak boleh kosong").default(""),
+        nodeId: z.string().nonempty("serial number tidak boleh kosong").default(""),
         name: z.string().nonempty("nama tidak boleh kosong").default(""),
         active: z.boolean({
             errorMap: () => ({ message: "active status tidak valid" })
         }).default(false)
     },
     addNodeItems: {
-        serialNumber: z.string().nonempty("serial number tidak boleh kosong").default(""),
+        nodeId: z.string().nonempty("serial number tidak boleh kosong").default(""),
         items: z.object({
             ioPort: z.coerce.number().min(1).max(8),
             name: z.string().nonempty().default(""),
@@ -47,7 +47,7 @@ export const validationSchema = {
         }).array()
     },
     editNodeItems: {
-        serialNumber: z.string().nonempty("serial number tidak boleh kosong"),
+        nodeId: z.string().nonempty("serial number tidak boleh kosong"),
         items: z.object({
             ioPort: z.coerce.number().min(1).max(8),
             name: z.string().nonempty().default(""),

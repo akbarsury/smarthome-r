@@ -22,16 +22,16 @@ export const formsSchema = {
         newPassword: z.string().nonempty().min(8).max(20).default(""),
     },
     addNode: {
-        serialNumber: z.string().nonempty().default(""),
+        nodeId: z.string().nonempty().default(""),
         name: z.string().nonempty().default("")
     },
     editNode: {
-        serialNumber: z.string().nonempty().default(""),
+        nodeId: z.string().nonempty().default(""),
         name: z.string().nonempty().default(""),
         active: z.boolean().default(false)
     },
     addNodeItems: {
-        serialNumber: z.string().nonempty().default(""),
+        nodeId: z.string().nonempty().default(""),
         items: z.object({
             ioPort: z.coerce.number().min(1).max(8),
             name: z.string().nonempty().default(""),
@@ -40,7 +40,7 @@ export const formsSchema = {
         }).array()
     },
     editNodeItems: {
-        serialNumber: z.string().nonempty(),
+        nodeId: z.string().nonempty(),
         items: z.object({
             ioPort: z.coerce.number().min(1).max(8),
             name: z.string().nonempty().default(""),

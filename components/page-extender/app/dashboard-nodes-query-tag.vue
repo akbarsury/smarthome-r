@@ -40,8 +40,8 @@
                   ? 'before:bg-green-700'
                   : 'before:bg-red-700',
               ]"
-              @mousedown="itemAction.fn(nodeItem.name).init()"
-              @click.prevent="itemAction.fn().exec()"
+              @mousedown="itemAction.init(nodeItem.name, 'switch')"
+              @click.prevent="itemAction.exec()"
             >
               <Icon
                 class="block relative translate-y-[-13px]"
@@ -57,6 +57,8 @@
               :class="[
                 'h-[26px] bg-blue-100 border-[1px] border-neutral-400 outline outline-[2px] outline-neutral-50 active:translate-y-[2px] shadow-[0px_5px_#999] shadow-neutral-400 active:shadow-[0px_3px_#888] rounded-[15px]',
               ]"
+              @mousedown="itemAction.init(nodeItem.name, 'restart')"
+              @click.prevent="itemAction.exec()"
               v-if="nodeItem.current === 'on'"
             >
               <Icon class="block" size="24px" name="mdi:loop" />
@@ -67,8 +69,8 @@
               :class="[
                 'h-[26px] bg-blue-600 border-[5px] border-neutral-950 outline outline-[2px] outline-neutral-50 active:translate-y-[2px] shadow-[0px_5px_#999] shadow-neutral-400 active:shadow-[0px_3px_#888] rounded-[15px]',
               ]"
-              @mousedown="itemAction.fn(nodeItem.name).init()"
-              @click.prevent="itemAction.fn().exec()"
+              @mousedown="itemAction.init(nodeItem.name, 'push')"
+              @click.prevent="itemAction.exec()"
             >
               <Icon
                 :class="['block bg-transparent active:translate-y-[9px] h-4']"
@@ -83,7 +85,7 @@
   </div>
   <div
     class="action-confirmation"
-    v-if="toValue(itemAction.data.value?.isActive) === false"
+    v-if="toValue(itemAction._counter.value?.isActive) === false"
   >
     <CompositeModalFullPage>
       <div class="container max-w-screen-md">
@@ -93,12 +95,12 @@
           </div>
           <CompositeSwipeConfirmation
             class="max-w-[480px] mb-2"
-            @confirmed="itemAction.fn().exec()"
+            @confirmed="itemAction.exec()"
           />
           <div class="text-center">
             <button
               class="text-blue-400 underline"
-              @click.prevent="itemAction.fn().cancel()"
+              @click.prevent="itemAction.cancel()"
             >
               Cancel
             </button>
@@ -112,66 +114,106 @@
 <script setup lang="ts">
 import type { Pausable, UseIntervalControls } from "@vueuse/core";
 
-const serialNumber = useRoute().query["tag"];
+const nodeId = useRoute().query["tag"];
 const { _value: nodeData, refresh: refreshnodesData } = await useApiFetch(
-  `/api/v1.0/node/${serialNumber}` as "/api/v1.0/node/:serialNumber"
+  `/api/v1.0/node/${nodeId}` as "/api/v1.0/node/:nodeId"
 );
 
-type ItemActionFn = (label?: string) => {
-  init: () => void;
+interface ItemAction {
+  data: globalThis.Ref<{
+    itemIndex: number;
+    executionType: "switch" | "push" | "restart";
+    confirmed?: boolean;
+  } | null>;
+  _counter: globalThis.Ref<
+    ({ initTime: number } & UseIntervalControls & Pausable) | null
+  >;
+  init: (label: string, executionType: "switch" | "push" | "restart") => void;
   exec: () => void;
   cancel: () => void;
-};
-
-interface ItemAction {
-  data: globalThis.Ref<
-    (UseIntervalControls & Pausable & { itemIndex?: number }) | null
-  >;
-  fn: ItemActionFn;
+  reset: () => void;
 }
 
 const itemAction: ItemAction = {
   data: ref(null),
-  fn: (label?: string) => {
-    const init = () => {
-      itemAction.data.value = computed(() => {
-        const findIndex = nodeData.value?.data?.items?.findIndex(
-          (node) => node?.name == label
-        );
-        console.log({ label, itemAction: findIndex });
+  _counter: ref(null),
+  init: (label, executionType) => {
+    const initTime = new Date().getTime();
+    const indexedItem = nodeData.value?.data?.items?.findIndex(
+      (node) => node?.name == label
+    );
 
-        return typeof findIndex === "number" && findIndex >= 0
-          ? {
-              ...useInterval(100, { controls: true }),
-              itemIndex: findIndex,
-            }
-          : null;
+    if (typeof indexedItem === "number") {
+      itemAction.data.value = {
+        itemIndex: indexedItem,
+        executionType,
+      };
+      itemAction._counter.value = computed(() => {
+        return {
+          initTime,
+          ...useInterval(100, { controls: true }),
+        };
       }).value;
+    }
 
-      setTimeout(() => {
-        if (itemAction.data.value?.isActive.value) {
-          reset();
+    setTimeout(() => {
+      if (itemAction._counter.value?.initTime === initTime) {
+        itemAction.reset();
+      }
+    }, 30000);
+  },
+
+  exec: async () => {
+    if (itemAction.data.value === null) return;
+
+    if (
+      itemAction._counter.value &&
+      typeof itemAction.data.value.confirmed === "undefined"
+    ) {
+      itemAction._counter.value?.pause();
+      itemAction.data.value.confirmed = false;
+      return;
+    }
+
+    if (itemAction.data.value.confirmed === false) {
+      console.log({
+        nodeId,
+        ...itemAction.data.value,
+        clickTime: itemAction._counter.value?.counter,
+      });
+      const { _value: executionData } = await useApiFetch(
+        `/api/v1.0/node/${nodeId}/execution` as "/api/v1.0/node/:nodeId/execution",
+        {
+          method: "post",
+          body: {
+            ...itemAction.data.value,
+            clickTime: itemAction._counter.value?.counter,
+          },
         }
-      }, 30000);
-    };
+      );
+      if (executionData.value?.data) {
+        const watchExecution = { id: executionData.value.data.requestId };
+      }
 
-    const exec = () => {
-      if (itemAction.data.value === null) return;
+      setTimeout(() => itemAction.reset(), 2000);
+    }
+  },
 
-      if (itemAction.data.value.isActive) return itemAction.data.value.pause();
-      console.log({ itemAction: itemAction.data.value });
-      setTimeout(() => reset(), 2000);
-    };
+  cancel: () => itemAction.reset(),
 
-    const cancel = () => reset();
-
-    const reset = () => {
-      itemAction.data.value = null;
-    };
-
-    return { init, exec, cancel };
+  reset: () => {
+    itemAction.data.value = null;
+    itemAction._counter.value = null;
   },
 };
+
+onMounted(async () => {
+  if (typeof nodeId === "string") {
+    useWsStore().webSocket.onReady(() =>
+      console.log(useWsStore().webSocket.send("bind", { nodeId }))
+    );
+  }
+});
 </script>
 
 <style scoped></style>

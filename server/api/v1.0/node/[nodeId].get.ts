@@ -1,9 +1,10 @@
 export default defineEventHandler(async (event) => {
     const { session } = await serverUtils.useSmarthome().requestHandler(event).exec('app-client')
     if (!session) return serverUtils.generateApiResponse(event, { statusCode: 401 })
-    const users = await serverUtils.useSmarthome().storage.user().get()
+    const nodeId = getRouterParam(event, "nodeId")
+    const node = await serverUtils.useSmarthome().storage.node().get(nodeId!)
+    if (!node) return serverUtils.generateApiResponse(event, { statusCode: 204 })
     return serverUtils.generateApiResponse(event, {
-        statusCode: 200,
-        data: users
+        data: { name: node.name, items: node.items }
     })
 })

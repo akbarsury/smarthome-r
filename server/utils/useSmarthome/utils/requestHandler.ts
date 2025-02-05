@@ -8,7 +8,7 @@ type RequestHandlerResponse = {
     message?: string,
     session?: Session,
     node?: {
-        serialNumber: string
+        nodeId: string
     }
 }
 
@@ -28,11 +28,11 @@ export class RequestHandler {
             this.response = session && isSessionNotExpires ? { statusCode: 200, message: 'authorized', session } : { statusCode: 401, message: 'unauthorized' }
         }
         else if (handlerType === 'node') {
-            const { 'X-app-credential': appCredential, 'X-node-serial-number': nodeSerialNumber } = getRequestHeaders(this.event)
-            this.response = (appCredential === useRuntimeConfig(this.event).SmarthomeCredential && nodeSerialNumber) ? {
+            const { 'X-app-credential': appCredential, 'X-node-serial-number': nodeId } = getRequestHeaders(this.event)
+            this.response = (appCredential === useRuntimeConfig(this.event).SmarthomeCredential && nodeId) ? {
                 statusCode: 200,
                 message: 'authorized',
-                node: { serialNumber: nodeSerialNumber }
+                node: { nodeId: nodeId }
             } : { statusCode: 401, message: 'unauthorized' }
 
         }

@@ -1,0 +1,1 @@
+export default defineWebSocketHandler(serverUtils.useSmarthome().webSocket().ws)

@@ -1,16 +1,16 @@
 namespace Server {
     namespace Node {
         interface PreActivate {
-            credential?: string
-            token?: string
+            credential: string
+            token: string
         }
         interface General {
             name: string
-            active?: boolean
-            acceptedUsers?: string[],
+            active: boolean
+            acceptedUsers: string[],
         }
-        interface SerialNumber {
-            serialNumber: string
+        interface Id {
+            nodeId: string
         }
         interface Items {
             items: ({

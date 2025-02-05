@@ -54,7 +54,7 @@ onMounted(async () => {
     useAppConfig().resolvedOriginRouting === "app" &&
     useAuth().status.value === "authenticated"
   ) {
-    ws_user ? await useWsStore().init() : true;
+    useWsStore().user ? await useWsStore().initNodeWebSocket("nodeId") : true;
   }
 });
 </script>

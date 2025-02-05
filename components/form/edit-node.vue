@@ -124,7 +124,7 @@ const editNodeForm = reactive({
       editNodeForm.submit.meta.submitting = true;
 
       const { _value } = await useApiFetch(
-        `/api/v1.0/node/${node.value.serialNumber}` as "/api/v1.0/node/:nodeId",
+        `/api/v1.0/node/${node.value.nodeId}` as "/api/v1.0/node/:nodeId",
         {
           method: "put",
           body: values.value,
@@ -151,7 +151,7 @@ const editNodeForm = reactive({
 const { fields, values, meta, isValid } = useManagementForm().editNode();
 
 Object.keys(fields).forEach(<S = keyof typeof fields>(field: S) => {
-  fields[field].val = node.value[field as "serialNumber" | "name" | "active"];
+  fields[field].val = node.value[field as "nodeId" | "name" | "active"];
 });
 </script>
 

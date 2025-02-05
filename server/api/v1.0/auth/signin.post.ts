@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         if (userFetch.registered && userFetch.localId) {
             const key = useRuntimeConfig().authSecret;
             signResponse.status = 'valid'
-            signResponse.token = useSmarthome().encryption.encrypt(userFetch.localId.concat('|', csrfToken), key)
+            signResponse.token = serverUtils.useSmarthome().encryption.encrypt(userFetch.localId.concat('|', csrfToken), key)
             return signResponse;
         }
     }

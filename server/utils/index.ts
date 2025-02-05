@@ -1,2 +1,4 @@
-export { useSmarthome } from "./useSmarthome"
-export { generateApiResponse } from "./generateApiResponse"
+import { useSmarthome } from "./useSmarthome"
+import { generateApiResponse } from "./generateApiResponse"
+
+export const serverUtils = { useSmarthome, generateApiResponse }

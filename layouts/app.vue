@@ -16,7 +16,7 @@
       ]"
     >
       <div
-        class="container h-fit"
+        class="container w-full h-fit"
         v-if="
           $router.currentRoute.value.name !== 'home' &&
           !$router.currentRoute.value.name?.toString().startsWith('app-auth-')
@@ -72,7 +72,9 @@
           </div>
         </div>
       </div>
-      <slot />
+      <div class="container w-full">
+        <slot />
+      </div>
     </div>
   </div>
 </template>

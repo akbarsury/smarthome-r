@@ -12,17 +12,22 @@ namespace Apis {
     }
     namespace Nodes {
         type Node = {
-            serialNumber: string
+            nodeId: string
             name: string
             active: boolean
         }
-        type Switch = {
-            name: string
-            type: "switch" | "push"
-            icon: string
-        }
+        type Item = {
+            name: string,
+            type: "switch" | "push",
+            icon: string,
+            current?: "on" | "off"
+        } | null
         type NewNode = {
-            serialNumber: string
+            nodeId: string
         }
+    }
+    namespace WebSocket {
+        type MessagesKeys = "bind"
+        type Messages<T extends keyof MessagesKeys = keyof MessagesKeys, S = any> = Record<T, S>
     }
 }

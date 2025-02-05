@@ -27,7 +27,7 @@
           </span>
           <div>
             <span class="inline-block w-28">Serial Number</span>
-            <span class="capitalize">: {{ node.serialNumber }}</span>
+            <span class="capitalize">: {{ node.nodeId }}</span>
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@ const deleteNodeForm = reactive({
       deleteNodeForm.submit.meta.submitting = true;
 
       const { _value } = await useApiFetch(
-        `/api/v1.0/node/${node.value.serialNumber}` as "/api/v1.0/node/:nodeId",
+        `/api/v1.0/node/${node.value.nodeId}` as "/api/v1.0/node/:nodeId",
         { method: "delete" }
       );
 

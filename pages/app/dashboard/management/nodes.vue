@@ -29,7 +29,7 @@
                 <div>
                   <span
                     :class="[
-                      'text-xs p-1 px-2 rounded-full',
+                      'block text-xs p-1 px-2 rounded-full',
                       node.active ? 'bg-green-500' : 'bg-neutral-400',
                     ]"
                   >

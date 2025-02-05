@@ -13,42 +13,59 @@ class FirebaseAdmin {
 }
 
 type NodeStorageObject = Server.Node.PreActivate & Server.Node.General & Server.Node.Items
-type NodeObject = Server.Node.SerialNumber | (Server.Node.SerialNumber & NodeStorageObject)
+type NodeObject = Server.Node.Id | (Server.Node.Id & NodeStorageObject)
+type NodeExec = {
+    itemIndex: number,
+    executionType: "switch" | "push" | "restart",
+    clickTime: number
+}
 
 class SmarthomeStorage {
     private storage = useStorage('db')
     private auth = new FirebaseAdmin().auth
     private firestore = new FirebaseAdmin().firestore
 
+    private util = {
+        user: {
+            toInternalUserAdapter: (user: UserRecord): Partial<Apis.Users.User> | null => {
+                return user.uid && user.email ? {
+                    id: user.uid,
+                    email: user.email,
+                    name: user.displayName,
+                    rule: user.customClaims?.rule
+                } : null
+            },
+
+            toFirebaseUserDataAdapter: (user: Partial<Apis.Users.User>): UserRecord | UpdateRequest | null => {
+                return user.id && user.email ? {
+                    uid: user.id,
+                    email: user.email,
+                    displayName: user.name,
+                    rule: undefined,
+                    customClaims: {
+                        rule: user.rule
+                    }
+                } as UserRecord | UpdateRequest : null
+            }
+        },
+        node: {
+            use: async (nodeId: string) => {
+                const resolvedNode = await this.storage.getItem<NodeStorageObject>(`node:${nodeId}`)
+
+                return resolvedNode ? Object.assign(resolvedNode, { nodeId }) : null
+            }
+        }
+    }
+
     user = () => {
-        const toInternalUserAdapter = (user: UserRecord): Partial<Apis.Users.User> | null => {
-            return user.uid && user.email ? {
-                id: user.uid,
-                email: user.email,
-                name: user.displayName,
-                rule: user.customClaims?.rule
-            } : null
-        }
 
-        const toFirebaseUserDataAdapter = (user: Partial<Apis.Users.User>): UserRecord | UpdateRequest | null => {
-            return user.id && user.email ? {
-                uid: user.id,
-                email: user.email,
-                displayName: user.name,
-                rule: undefined,
-                customClaims: {
-                    rule: user.rule
-                }
-            } as UserRecord | UpdateRequest : null
-        }
-
-        const get = (pageToken?: string) => this.auth.listUsers(100)
-            .then((usersList) => usersList.users.map(user => toInternalUserAdapter(user)))
+        const get = async (pageToken?: string) => await this.auth.listUsers(100)
+            .then((usersList) => usersList.users.map(user => this.util.user.toInternalUserAdapter(user)))
             .catch((e) => null)
 
-        const getByUid = (id: string) => this.auth.getUser(id)
+        const getByUid = async (id: string) => await this.auth.getUser(id)
 
-        const getByEmail = (email: string) => this.auth.getUserByEmail(email)
+        const getByEmail = async (email: string) => await this.auth.getUserByEmail(email)
 
         const add = async (newUser: Omit<Apis.Users.User, "id"> & { password: string }) => await this.auth.createUser({
             email: newUser.email,
@@ -56,23 +73,23 @@ class SmarthomeStorage {
             password: newUser.password,
         })
             .then(async (user) => {
-                const _user = toInternalUserAdapter(user)
+                const _user = this.util.user.toInternalUserAdapter(user)
                 if (!_user) return _user
                 return await update(user.uid, { ..._user, rule: "user" } as Apis.Users.User)
             })
             .catch((e) => null)
 
-        const remove = (id: string) => this.auth.deleteUser(id).then(() => { return { id } }).catch((e) => undefined)
+        const remove = (id: string) => this.auth.deleteUser(id).then(() => { return { id } }).catch((e) => null)
 
         const update = async (id: string, userRecord: Omit<Apis.Users.User, "id">) => {
-            const _user = toFirebaseUserDataAdapter({ id, ...userRecord }) as UpdateRequest | null
-            console.log({ userRecord, _user });
+            const _user = this.util.user.toFirebaseUserDataAdapter({ id, ...userRecord }) as UpdateRequest | null
 
-            if (!_user) return _user
+            if (!_user) return null
+
             return this.auth.updateUser(id, _user).then(async (user: UserRecord) => {
                 return userRecord.rule ? await this.auth.setCustomUserClaims(user.uid, { rule: userRecord.rule }).then(async () => {
-                    return toInternalUserAdapter({ ..._user, ...user, } as UserRecord)
-                }) : toInternalUserAdapter({ ..._user, ...user } as UserRecord)
+                    return this.util.user.toInternalUserAdapter({ ..._user, ...user, } as UserRecord)
+                }) : this.util.user.toInternalUserAdapter({ ..._user, ...user } as UserRecord)
             })
         }
 
@@ -81,72 +98,90 @@ class SmarthomeStorage {
         return { get, getByUid, getByEmail, add, remove, update, updatePassword }
     }
 
-    nodes = () => {
-        const register = async (serialNumber: string, uuid: string) => {
+    node = () => {
+        const register = async (nodeId: string, uuid: string) => {
             const credential = encryption().encrypt(`${useRuntimeConfig().SmarthomeCredential}|${new Date().getTime()}`, useRuntimeConfig().SmarthomeCredential)
-            const token = credential ? encryption().encrypt(serialNumber, credential) : undefined
-            if (credential && token) {
-                const nodeStorage: NodeStorageObject = {
-                    credential,
-                    token,
-                    name: serialNumber,
-                    active: false,
-                    acceptedUsers: [uuid],
-                    items: []
-                }
-                await this.storage.setItem(`node:${serialNumber}`, nodeStorage)
-                return nodeStorage
+
+            const token = credential ? encryption().encrypt(nodeId, credential) : null
+
+            if (!(credential && token)) return null
+
+            const nodeStorage: NodeStorageObject = {
+                credential,
+                token,
+                name: nodeId,
+                active: false,
+                acceptedUsers: [uuid],
+                items: []
             }
+
+            return await this.storage.setItem(`node:${nodeId}`, nodeStorage).then(() => nodeStorage).catch(() => null)
         }
 
-        const activate = async (serialNumber: string, token: string) => {
-            let node = await this.nodes().use(serialNumber)
-            const maybeSerialNumber = node.credential ? encryption().decrypt(token, node.credential) : undefined
-            if (maybeSerialNumber === serialNumber) {
-                node = { ...node, active: true, credential: undefined, token: undefined }
-                await this.storage.setItem(`node:${serialNumber}`, node)
-                return node
-            }
+        const activate = async (nodeId: string, token: string) => {
+            const node = await this.util.node.use(nodeId)
+
+            if (!node) return null
+
+            const maybeNodeId = node.credential ? encryption().decrypt(token, node.credential) : undefined
+
+            if (maybeNodeId !== nodeId) return null
+
+            const nodeActivated: Server.Node.General & Server.Node.Items = Object.assign({ ...node, active: true, credential: undefined, token: undefined })
+
+            return await this.storage.setItem(`node:${nodeId}`, node).then(() => nodeActivated).catch(() => null)
         }
 
-        const get = async (options?: { activeOnly?: boolean }) => {
-            let nodes: string[] = await this.storage.getKeys("node").then((keys) => keys.map((keyName) => keyName.replace("node:", "")))
+        const get = async (nodeId: string) => await this.util.node.use(nodeId)
+
+        const list = async (options?: { activeOnly?: boolean }) => {
+            let nodes = await this.storage.getKeys("node")
+                .then((keys) => keys.map((keyName) => keyName.replace("node:", "")))
+                .catch(() => null)
+
+            if (!nodes) return null
+
             if (options?.activeOnly) {
                 nodes = await nodes.reduce<Promise<string[]>>(async (last, current) => {
-                    const isActive = (await use(current)).active === true
+                    const isActive = (await this.util.node.use(current))?.active === true
                     return isActive ? (await last).concat(current) : last
                 }, Promise.resolve([]))
             }
 
-            const withValue = async () => {
-                return await nodes.reduce<Promise<NodeObject[]>>(async (last, current) => {
-                    const serialNumber = current
-                    const node = {
-                        ...(await use(serialNumber)),
-                        serialNumber
-                    }
-                    return (await last).concat(node)
-                }, Promise.resolve([]))
-            }
+            const withValue = async () => !nodes ? null : await nodes.reduce<Promise<NodeObject[]>>(async (last, current) => {
+                const nodeId = current
+                const node = {
+                    ...(await this.util.node.use(nodeId)),
+                    nodeId
+                }
+
+                return (await last).concat(node)
+            }, Promise.resolve([]))
+
             return { nodes, withValue }
         }
 
-        const remove = async (serialNumber: string) => this.storage.removeItem(`node:${serialNumber}`).then(() => { return { serialNumber } }).catch((e) => undefined)
+        const remove = async (nodeId: string) => this.storage.removeItem(`node:${nodeId}`).then(() => { return { nodeId } }).catch((e) => null)
 
-        const update = async (serialNumber: string, update: { general?: Partial<Server.Node.General>, data?: Server.Node.Items }) => {
-            let node = await this.nodes().use(serialNumber)
+        const update = async (nodeId: string, update: { general?: Partial<Server.Node.General>, data?: Server.Node.Items }) => {
+            let node = await this.util.node.use(nodeId)
+
+            if (!node) return null
+
             let { general, data } = update
-            console.log({ general, data });
+            Object.assign(node, general, data)
 
-            node = update.general ? { ...node, ...general } : node
-            node = update.data ? { ...node, ...data } : node
-            await this.storage.setItem(`node:${serialNumber}`, node)
-            return node
+            return await this.storage.setItem(`node:${nodeId}`, node).then(() => node).catch(() => null)
         }
 
-        const use = (serialNumber: string) => this.storage.getItem(`node:${serialNumber}`) as unknown as Promise<NodeStorageObject>
+        const exec = async (nodeId: string, exec: NodeExec) => {
+            const requestId = nodeId ? (await (this.firestore.collection("request/lists/" + nodeId).add(exec))).id : null
+            return requestId ? { requestId } : null
+            // return requestId ? await this.taskStorage.setItem(`${nodeId}:${requestId}`, node).then(() => node).catch(() => null) : null
 
-        return { register, activate, get, remove, update, use }
+        }
+
+        return { register, activate, list, get, remove, update, exec }
     }
 }
 
