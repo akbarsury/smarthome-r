@@ -46,7 +46,7 @@ export default NuxtAuthHandler({
                     const csrfToken: string | undefined = (credentials?.csrfToken as string)
                     if (decryptedtoken && csrfToken && token === csrfToken) {
                         const maybe_uid = decryptedtoken.split(/[|]/)[0]
-                        const { uid } = await serverUtils.useSmarthome().storage.user().getByUid(maybe_uid)
+                        const { uid } = await serverUtils.useSmarthome().storage.user.getByUid(maybe_uid)
                         user.id = uid
                         return await Promise.resolve({ user, account }).then(() => true)
                     }
@@ -63,9 +63,8 @@ export default NuxtAuthHandler({
             session: ArahSmarthomeSession
             token: JWT
         }) => {
-            console.warn(['SESSION', session.user?.email]);
             if (token.sub) {
-                const { uid, email, displayName } = await serverUtils.useSmarthome().storage.user().getByUid(token.sub);
+                const { uid, email, displayName } = await serverUtils.useSmarthome().storage.user.getByUid(token.sub);
                 (session.user as ArahSmarthomeUser) = { id: "", email, username: email?.split('@')[0], name: displayName }
             }
             return Promise.resolve(session)

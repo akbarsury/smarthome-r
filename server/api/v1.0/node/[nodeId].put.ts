@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     const nodeId = getRouterParam(event, "nodeId")
     const editNode = await editNodeSchema.spa(await readBody(event))
     if (!nodeId && !editNode.success) return serverUtils.generateApiResponse(event, { statusCode: 400 })
-    const node = nodeId ? await serverUtils.useSmarthome().storage.node().update(nodeId, { general: editNode.data }) : null
+    const node = nodeId ? await serverUtils.useSmarthome().storage.node.update(nodeId, { general: editNode.data }) : null
     return serverUtils.generateApiResponse(event, {
         statusCode: node ? 200 : 500,
         data: node ? { nodeId } : undefined

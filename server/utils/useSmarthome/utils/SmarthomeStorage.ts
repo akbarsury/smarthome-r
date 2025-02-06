@@ -50,24 +50,23 @@ class SmarthomeStorage {
         },
         node: {
             use: async (nodeId: string) => {
-                const resolvedNode = await this.storage.getItem<NodeStorageObject>(`node:${nodeId}`)
+                const resolvedNode = await this.storage.getItem<NodeStorageObject>(`node:${nodeId}.json`)
 
                 return resolvedNode ? Object.assign(resolvedNode, { nodeId }) : null
             }
         }
     }
 
-    user = () => {
-
-        const get = async (pageToken?: string) => await this.auth.listUsers(100)
+    user = {
+        get: async (pageToken?: string) => await this.auth.listUsers(100)
             .then((usersList) => usersList.users.map(user => this.util.user.toInternalUserAdapter(user)))
-            .catch((e) => null)
+            .catch((e) => null),
 
-        const getByUid = async (id: string) => await this.auth.getUser(id)
+        getByUid: async (id: string) => await this.auth.getUser(id),
 
-        const getByEmail = async (email: string) => await this.auth.getUserByEmail(email)
+        getByEmail: async (email: string) => await this.auth.getUserByEmail(email),
 
-        const add = async (newUser: Omit<Apis.Users.User, "id"> & { password: string }) => await this.auth.createUser({
+        add: async (newUser: Omit<Apis.Users.User, "id"> & { password: string }) => await this.auth.createUser({
             email: newUser.email,
             displayName: newUser.name,
             password: newUser.password,
@@ -75,13 +74,13 @@ class SmarthomeStorage {
             .then(async (user) => {
                 const _user = this.util.user.toInternalUserAdapter(user)
                 if (!_user) return _user
-                return await update(user.uid, { ..._user, rule: "user" } as Apis.Users.User)
+                return await this.user.update(user.uid, { ..._user, rule: "user" } as Apis.Users.User)
             })
-            .catch((e) => null)
+            .catch((e) => null),
 
-        const remove = (id: string) => this.auth.deleteUser(id).then(() => { return { id } }).catch((e) => null)
+        remove: (id: string) => this.auth.deleteUser(id).then(() => { return { id } }).catch((e) => null),
 
-        const update = async (id: string, userRecord: Omit<Apis.Users.User, "id">) => {
+        update: async (id: string, userRecord: Omit<Apis.Users.User, "id">) => {
             const _user = this.util.user.toFirebaseUserDataAdapter({ id, ...userRecord }) as UpdateRequest | null
 
             if (!_user) return null
@@ -91,15 +90,15 @@ class SmarthomeStorage {
                     return this.util.user.toInternalUserAdapter({ ..._user, ...user, } as UserRecord)
                 }) : this.util.user.toInternalUserAdapter({ ..._user, ...user } as UserRecord)
             })
-        }
+        },
 
-        const updatePassword = (id: string, password: string) => this.auth.updateUser(id, { password })
+        updatePassword: (id: string, password: string) => this.auth.updateUser(id, { password })
 
-        return { get, getByUid, getByEmail, add, remove, update, updatePassword }
+        // return { get, getByUid, getByEmail, add, remove, update, updatePassword }
     }
 
-    node = () => {
-        const register = async (nodeId: string, uuid: string) => {
+    node = {
+        register: async (nodeId: string, uuid: string) => {
             const credential = encryption().encrypt(`${useRuntimeConfig().SmarthomeCredential}|${new Date().getTime()}`, useRuntimeConfig().SmarthomeCredential)
 
             const token = credential ? encryption().encrypt(nodeId, credential) : null
@@ -115,10 +114,10 @@ class SmarthomeStorage {
                 items: []
             }
 
-            return await this.storage.setItem(`node:${nodeId}`, nodeStorage).then(() => nodeStorage).catch(() => null)
-        }
+            return await this.storage.setItem(`node:${nodeId}.json`, nodeStorage).then(() => nodeStorage).catch(() => null)
+        },
 
-        const activate = async (nodeId: string, token: string) => {
+        activate: async (nodeId: string, token: string) => {
             const node = await this.util.node.use(nodeId)
 
             if (!node) return null
@@ -129,14 +128,14 @@ class SmarthomeStorage {
 
             const nodeActivated: Server.Node.General & Server.Node.Items = Object.assign({ ...node, active: true, credential: undefined, token: undefined })
 
-            return await this.storage.setItem(`node:${nodeId}`, node).then(() => nodeActivated).catch(() => null)
-        }
+            return await this.storage.setItem(`node:${nodeId}.json`, node).then(() => nodeActivated).catch(() => null)
+        },
 
-        const get = async (nodeId: string) => await this.util.node.use(nodeId)
+        get: async (nodeId: string) => await this.util.node.use(nodeId),
 
-        const list = async (options?: { activeOnly?: boolean }) => {
+        list: async (options?: { activeOnly?: boolean }) => {
             let nodes = await this.storage.getKeys("node")
-                .then((keys) => keys.map((keyName) => keyName.replace("node:", "")))
+                .then((keys) => keys.map((keyName) => keyName.replace("node:", "").replace(".json", "")))
                 .catch(() => null)
 
             if (!nodes) return null
@@ -159,11 +158,11 @@ class SmarthomeStorage {
             }, Promise.resolve([]))
 
             return { nodes, withValue }
-        }
+        },
 
-        const remove = async (nodeId: string) => this.storage.removeItem(`node:${nodeId}`).then(() => { return { nodeId } }).catch((e) => null)
+        remove: async (nodeId: string) => this.storage.removeItem(`node:${nodeId}.json`).then(() => { return { nodeId } }).catch((e) => null),
 
-        const update = async (nodeId: string, update: { general?: Partial<Server.Node.General>, data?: Server.Node.Items }) => {
+        update: async (nodeId: string, update: { general?: Partial<Server.Node.General>, data?: Server.Node.Items }) => {
             let node = await this.util.node.use(nodeId)
 
             if (!node) return null
@@ -171,18 +170,28 @@ class SmarthomeStorage {
             let { general, data } = update
             Object.assign(node, general, data)
 
-            return await this.storage.setItem(`node:${nodeId}`, node).then(() => node).catch(() => null)
-        }
+            return await this.storage.setItem(`node:${nodeId}.json`, node).then(() => node).catch(() => null)
+        },
 
-        const exec = async (nodeId: string, exec: NodeExec) => {
+        exec: async (nodeId: string, exec: NodeExec) => {
             const requestId = nodeId ? (await (this.firestore.collection("request/lists/" + nodeId).add(exec))).id : null
             return requestId ? { requestId } : null
             // return requestId ? await this.taskStorage.setItem(`${nodeId}:${requestId}`, node).then(() => node).catch(() => null) : null
+        },
+    }
 
-        }
+    app = {
+        validApp: async (appId: string) => this.storage.hasItem(`apps:${appId}.json`).then(async validOnStorage => {
+            if (validOnStorage) return true
+            const appOnFirestoreSnapshot = await this.firestore.doc(`apps/${appId}`).get()
+            if (appOnFirestoreSnapshot.exists) {
+                console.log({ appdata: appOnFirestoreSnapshot.data() });
 
-        return { register, activate, list, get, remove, update, exec }
+                return await this.storage.setItem(`apps:${appId}.json`, JSON.stringify(appOnFirestoreSnapshot.data() || {})).then(() => true).catch(() => false)
+            }
+            return false
+        })
     }
 }
 
-export default SmarthomeStorage
+export { SmarthomeStorage, SmarthomeStorage as default }

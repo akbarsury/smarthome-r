@@ -1,5 +1,5 @@
 import { fileURLToPath } from "url";
-import SmarthomeStorage from './server/utils/useSmarthome/utils/smarthomeStorage';
+import SmarthomeStorage from './server/utils/useSmarthome/utils/SmarthomeStorage';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({

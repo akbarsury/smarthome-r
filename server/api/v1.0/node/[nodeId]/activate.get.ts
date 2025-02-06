@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
             "nodeId": "nodeId is required"
         }
     })
-    const node = await serverUtils.useSmarthome().storage.node().activate(nodeId, token)
+    const node = await serverUtils.useSmarthome().storage.node.activate(nodeId, token)
     return serverUtils.generateApiResponse(event,
         {
             statusCode: node ? 200 : 500,

@@ -1,16 +1,15 @@
 import { type Peer } from "crossws"
-import { useUnitControlledItems } from "./controlledItems"
 
 export class SmarthomeWebsocket {
     constructor() {
         this.jobs = []
-        this.clientToInit = []
+        this.clients = {}
     }
 
     private unit?: string;
     private nodePeer: Peer | undefined;
 
-    private clientToInit: string[];
+    private clients: Record<string, Peer>;
 
     private jobs: {
         id: string,
@@ -18,42 +17,53 @@ export class SmarthomeWebsocket {
         job: any
     }[];
 
+    getPeerHeaders = (peer: Peer) => Object.fromEntries(peer.request.headers.entries())
+
+    getPeerRequest = (peer: Peer) => {
+        const headers = this.getPeerHeaders(peer)
+        return {
+            url: peer.request.url,
+            path: peer.request.url.split(headers.origin).pop()?.split("?")[0],
+            query: Object.fromEntries(peer.request.url.split(headers.origin).pop()?.split("?").pop()?.split("&")
+                .filter((queryString) => queryString.split("=", 2).length === 2)
+                .map((queryString) => queryString.split("=")) || [[]]),
+            headers
+        }
+    }
+
+    getSession = async (peer: Peer) => {
+        const headers = this.getPeerHeaders(peer)
+        return await $fetch<Partial<Apis.Session.Session>>(`${headers.origin}/auth/session/`, {
+            headers: {
+                cookie: headers.cookie
+            }
+        })
+    }
+
+    initClient = async (peer: Peer): Promise<{ status: "initiated" | "ready-initiated", id: string } | null> => {
+        const session = await this.getSession(peer)
+        if (!session.user) return null
+        this.clients[session.user.email] = peer
+        console.log(Object.keys(this.clients));
+        return {
+            status: "initiated",
+            id: peer.id
+        }
+    }
+
+    destroyClient = (peer: Peer) => {
+        const id = Object.entries(this.clients).find((clientsEntries) => clientsEntries[1].id === peer.id)?.[0]
+        if (!id) return null
+        delete this.clients[id]
+        console.log(Object.keys(this.clients));
+        return peer.id
+    }
+
     updateUnit = (unitName: string) => {
         this.unit = unitName
     }
 
-    clientOpenConnection = (peer: Peer) => {
-        this.clientToInit
-        this.clientToInit.push(peer.id)
-    }
-
-    clientInit = async (peer: Peer): Promise<boolean> => {
-        this.clientToInit.splice(
-            this.clientToInit.length >= 11 ? 1 : this.clientToInit.indexOf(peer.id), this.clientToInit.length >= 11 ? this.clientToInit.length : 1
-        );
-        //
-        console.log({ 'client to ini length': this.clientToInit.length });
-        const initiatedClient = await this.isClientInitiated(peer).then(async (client) => {
-            if (client && this.unit) {
-                peer.subscribe('client');
-                peer.send(await useUnitControlledItems(this.unit).then((controlledItems) => {
-                    return !controlledItems.valid ? JSON.stringify({ responseType: "items-data", data: [] }) : JSON.stringify({
-                        responseType: "items-data", data: controlledItems.items.map((item) => {
-                            let _item = { ...item }
-                            _item.label = item.name
-                            _item.name = item.name.replace('-', ' ')
-                            return _item;
-                        })
-                    })
-                }))
-            };
-            return client
-        });
-        return initiatedClient;
-        //
-    }
-
-    isClientInitiated = async (peer: Peer): Promise<boolean> => this.clientToInit.includes(peer.id) ? false : true
+    // isClientInitiated = async (peer: Peer): Promise<boolean> => this.clientToInit.includes(peer.id) ? false : true
 
     isNodePeer = (peer: Peer): boolean => peer === this.nodePeer
 
@@ -80,32 +90,23 @@ export class SmarthomeWebsocket {
             data?: typeof messageJson
         } | null
 
-        const _default = async (): Promise<typeof messageResponse> => {
+        const _default = async () => {
             messageResponse = null
-            if (messageJson.requestAction === 'assign-node-server') {
-                if (messageJson.credential === useRuntimeConfig().wsNodeCredential) {
-                    await this.nodeConnect(peer).then((nodeConnectStatus) => {
-                        console.log(nodeConnectStatus ? "Node connect success" : "Node connect failed");
-                    })
-                }
-            }
-            else if (messageJson.requestAction === 'client-init') {
-                await this.clientInit(peer);
-            }
-            else if (peer === this.nodePeer) {
-                await nodeMessageHandler()
-            }
-            if (await this.isClientInitiated(peer)) {
-                await clientMessageHandler()
-            }
-
+            // if (messageJson.requestAction === 'assign-node-server') {
+            //     if (messageJson.credential === useRuntimeConfig().wsNodeCredential) {
+            //         await this.nodeConnect(peer).then((nodeConnectStatus) => {
+            //             console.log(nodeConnectStatus ? "Node connect success" : "Node connect failed");
+            //         })
+            //     }
+            // }
+            if (peer === this.nodePeer) await nodeMessageHandler()
             else {
                 messageResponse = {
                     err: "Invalid message",
                     message
                 }
-                peer.send(JSON.stringify(messageResponse));
-                peer.terminate();
+                if (process.env.NODE_ENV === "development") peer.send(JSON.stringify(messageResponse));
+                // peer.terminate();
             }
 
             return messageResponse;

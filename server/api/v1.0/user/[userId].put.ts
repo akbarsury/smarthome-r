@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     const userId = getRouterParam(event, "userId")
     console.log({ userId });
     if (!editUserSchema.safeParse(editUser).success && !userId) return serverUtils.generateApiResponse(event, { statusCode: 400 })
-    const user = userId ? await serverUtils.useSmarthome().storage.user().update(userId, editUser) : null
+    const user = userId ? await serverUtils.useSmarthome().storage.user.update(userId, editUser) : null
     return serverUtils.generateApiResponse(event, {
         statusCode: user ? 200 : 204,
         message: user ? "Success edit user" : "Failed edit user",

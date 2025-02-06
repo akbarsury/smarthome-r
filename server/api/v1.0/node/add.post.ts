@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     if (!session) return serverUtils.generateApiResponse(event, { statusCode: 401 })
     const newNode = (await readBody(event)) as NewNode
     if (!newNodeSchema.safeParse(newNode).success) return serverUtils.generateApiResponse(event, { statusCode: 400 })
-    const node = await serverUtils.useSmarthome().storage.node().register(newNode.nodeId, session.user?.email!)
+    const node = await serverUtils.useSmarthome().storage.node.register(newNode.nodeId, session.user?.email!)
     return serverUtils.generateApiResponse(event,
         {
             statusCode: node ? 200 : 500,

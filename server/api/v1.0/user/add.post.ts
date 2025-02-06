@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     if (!session) return serverUtils.generateApiResponse(event, { statusCode: 401 })
     const newUser = await readBody(event) as NewUser
     if (!newUserSchema.safeParse(newUser).success) return serverUtils.generateApiResponse(event, { statusCode: 400 })
-    const user = await serverUtils.useSmarthome().storage.user().add(newUser)
+    const user = await serverUtils.useSmarthome().storage.user.add(newUser)
     return serverUtils.generateApiResponse(event, {
         statusCode: user ? 200 : 500,
         data: user

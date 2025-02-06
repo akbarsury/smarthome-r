@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     const nodeId = getRouterParam(event, "nodeId")
     const executionNode = await executionNodeSchema.spa(await readBody(event))
     if (!nodeId && !executionNode.success) return serverUtils.generateApiResponse(event, { statusCode: 400 })
-    const node = nodeId && executionNode.data ? await serverUtils.useSmarthome().storage.node().exec(nodeId, executionNode.data) : null
+    const node = nodeId && executionNode.data ? await serverUtils.useSmarthome().storage.node.exec(nodeId, executionNode.data) : null
     return serverUtils.generateApiResponse(event, {
         statusCode: node ? 200 : 500,
         data: node

@@ -26,6 +26,19 @@ namespace Apis {
             nodeId: string
         }
     }
+    namespace Session {
+        type Session = {
+            user: Apis.Session.User,
+            expires: Apis.Session.Expires
+        }
+        type User = {
+            id: string,
+            email: string,
+            username: string,
+            name: string
+        }
+        type Expires = string
+    }
     namespace WebSocket {
         type MessagesKeys = "bind"
         type Messages<T extends keyof MessagesKeys = keyof MessagesKeys, S = any> = Record<T, S>
