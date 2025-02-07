@@ -2,7 +2,11 @@
   <div>
     <div
       class="fixed h-screen w-screen bg-neutral-50 z-[1000]"
-      v-if="loadingAppDelay"
+      v-if="
+        loadingAppDelay &&
+        (!appId ||
+          !$router.currentRoute.value.name?.toString().startsWith('app-auth'))
+      "
     >
       <CompositeLoadingApp />
     </div>
@@ -26,7 +30,9 @@
           <div class="bg-orange-200 rounded p-4">
             <div class="flex justify-between">
               <div>
-                <NuxtLink :to="{ name: 'app-dashboard' }">
+                <NuxtLink
+                  :to="{ name: 'app-dashboard-appId', params: { appId } }"
+                >
                   <h1 class="text-orange-700 text-2xl font-bold">
                     Smarthome Assistant
                   </h1>
@@ -42,7 +48,10 @@
                 <div class="flex gap-2" v-if="authStatus === 'authenticated'">
                   <div>
                     <NuxtLink
-                      :to="{ name: 'app-dashboard-nodes' }"
+                      :to="{
+                        name: 'app-dashboard-appId-nodes',
+                        params: { appId },
+                      }"
                       class="inline-block bg-orange-200 hover:bg-orange-300 border border-orange-400 p-1 px-3 rounded"
                     >
                       Nodes
@@ -50,7 +59,10 @@
                   </div>
                   <div>
                     <NuxtLink
-                      :to="{ name: 'app-dashboard-management-users' }"
+                      :to="{
+                        name: 'app-dashboard-appId-management-users',
+                        params: { appId },
+                      }"
                       class="inline-block bg-orange-200 hover:bg-orange-300 border border-orange-400 p-1 px-3 rounded"
                     >
                       Manajement
@@ -90,7 +102,35 @@ const signOut = () => {
 };
 
 const loadingAppDelay = ref(true);
-onMounted(() => {
+
+const { data } = useAuth();
+console.log(data.value);
+
+const appId = computed(() => ((data.value as any)?.appId as string) || null);
+
+onMounted(async () => {
+  const waitAppId = useIntervalFn(async () => {
+    if (
+      appId.value &&
+      useAuth().status.value === "authenticated" &&
+      !useRoute().name?.toString().startsWith("app-dashboard-appId")
+    ) {
+      useAppStore().updateAppId(appId.value);
+      useRouter().push({
+        name: "app-dashboard-appId",
+        params: { appId: appId.value },
+      });
+    }
+    if (
+      appId.value &&
+      useAuth().status.value === "authenticated" &&
+      useRoute().name?.toString().startsWith("app-dashboard-appId")
+    ) {
+      await useWsStore().initWebSocket(appId.value);
+      waitAppId.pause();
+    }
+  }, 1000);
+
   setTimeout(() => (loadingAppDelay.value = false), 1500);
 });
 </script>

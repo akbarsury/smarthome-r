@@ -21,8 +21,6 @@ export class WebSocket {
 
     onReady = (cb: () => void) => {
         const waitWebSocketInterval = useIntervalFn(() => {
-            console.log("waiting webSocket");
-            console.log({ wsdata: this._data });
             if (this._data.value) {
                 waitWebSocketInterval.pause()
                 cb()
@@ -32,11 +30,11 @@ export class WebSocket {
 
     send = <T extends keyof typeof MessagesSchema, S = z.infer<typeof MessagesSchema[T]>>(key: T, data: S) => this._data.value ? this._data.value.ws.send(JSON.stringify({ key, data })) : null
 
-    nodeConnect = (nodeId: string, accessToken: string) => {
+    appConnect = (appId: string, accessToken: string) => {
         const this_data = {
             name: "node",
             ws: useWebSocket(
-                `${useNitroOrigin()}/_ws/node?nodeId=${nodeId}&token=${accessToken}`,
+                `${useNitroOrigin()}/_ws/app?appId=${appId}&token=${accessToken}`,
                 webSocketOptions
             )
         }

@@ -1,6 +1,6 @@
 import CredentialsProvider, { CredentialInput } from 'next-auth/providers/credentials'
 import { NuxtAuthHandler } from '#auth'
-import type { Account, Session, SessionStrategy, User } from 'next-auth';
+import type { Account, Session, User } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 
 interface ArahSmarthomeCredential {
@@ -10,11 +10,14 @@ interface ArahSmarthomeCredential {
     token: string
 }
 
-type ArahSmarthomeUser = User & {
+interface ArahSmarthomeUser extends User {
     username?: string,
 }
 
-type ArahSmarthomeSession = Session
+type ArahSmarthomeSession = Pick<Session, "expires"> & {
+    user?: ArahSmarthomeUser
+    appId?: string
+}
 
 export default NuxtAuthHandler({
     secret: useRuntimeConfig().authSecret,
@@ -48,7 +51,8 @@ export default NuxtAuthHandler({
                         const maybe_uid = decryptedtoken.split(/[|]/)[0]
                         const { uid } = await serverUtils.useSmarthome().storage.user.getByUid(maybe_uid)
                         user.id = uid
-                        return await Promise.resolve({ user, account }).then(() => true)
+                        // return await Promise.resolve({ user, account }).then(() => true)
+                        return await Promise.resolve(user).then(() => true)
                     }
                 }
                 return 'signin'
@@ -59,19 +63,23 @@ export default NuxtAuthHandler({
         /* on redirect to another url */
         redirect: async ({ url, baseUrl }) => { return baseUrl },
         /* on session retrival */
-        session: async ({ session, token }: {
-            session: ArahSmarthomeSession
-            token: JWT
-        }) => {
+        session: async ({ session, token }): Promise<ArahSmarthomeSession> => {
+            let user = session.user as ArahSmarthomeUser
+            let appId = ""
+
             if (token.sub) {
                 const { uid, email, displayName } = await serverUtils.useSmarthome().storage.user.getByUid(token.sub);
-                (session.user as ArahSmarthomeUser) = { id: "", email, username: email?.split('@')[0], name: displayName }
+                user = { id: uid, email, username: email?.split('@')[0], name: displayName }
+                let key = `${uid}:app-permission:default`
+                let maybeAppId = await serverUtils.useSmarthome().storage.userStorage.getItem<Record<string, string>>(key)
+                appId = maybeAppId ? Object.keys(maybeAppId as object)[0] : appId
             }
-            return Promise.resolve(session)
+            return Promise.resolve({ user, appId, expires: session.expires } as ArahSmarthomeSession)
         },
         /* on JWT token creation or mutation */
         jwt: async ({ token, user, session }) => {
             console.warn(['JWT', token.email]);
+            token
             token.user = session
             return Promise.resolve(token)
         }

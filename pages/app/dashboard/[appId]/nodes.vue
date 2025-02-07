@@ -9,7 +9,8 @@
           <NuxtLink
             class="block bg-orange-100 hover:bg-orange-200 hover:text-orange-700 border border-orange-400 rounded p-4"
             :to="{
-              name: 'app-dashboard-nodes',
+              name: 'app-dashboard-appId-nodes',
+              params: { appId: useAppStore().appId },
               query: { tag: node.nodeId },
             }"
           >

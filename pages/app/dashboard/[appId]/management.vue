@@ -8,7 +8,10 @@
           <li>
             <NuxtLink
               class="hover:text-orange-500 hover:underline"
-              :to="{ name: 'app-dashboard-management-users' }"
+              :to="{
+                name: 'app-dashboard-appId-management-users',
+                params: { appId: useAppStore().appId },
+              }"
             >
               User Management
             </NuxtLink>
@@ -16,7 +19,10 @@
           <li>
             <NuxtLink
               class="hover:text-orange-500 hover:underline"
-              :to="{ name: 'app-dashboard-management-nodes' }"
+              :to="{
+                name: 'app-dashboard-appId-management-nodes',
+                params: { appId: useAppStore().appId },
+              }"
             >
               Node Management
             </NuxtLink>
@@ -40,8 +46,11 @@
 
 <script setup lang="ts">
 useIntervalFn(() => {
-  if (useRoute().name === "app-dashboard-management") {
-    useRouter().replace({ name: "app-dashboard-management-users" });
+  if (useRoute().name === "app-dashboard-appId-management") {
+    useRouter().replace({
+      name: "app-dashboard-appId-management-users",
+      params: { appId: useAppStore().appId },
+    });
   }
 }, 500);
 </script>

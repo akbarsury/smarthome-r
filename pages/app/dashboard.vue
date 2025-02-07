@@ -7,7 +7,7 @@
       <ClientOnly>
         <div class="mb-4">
           <h6 class="text-neutral-700 capitalize font-semibold">
-            {{ $router.currentRoute.value.path.split("/")[2] }}
+            {{ $router.currentRoute.value.path.split("/")[3] || "dashboard" }}
           </h6>
         </div>
         <NuxtPage />

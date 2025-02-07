@@ -5,8 +5,6 @@
 </template>
 
 <script setup lang="ts">
-const ws_user = useWsStore().user;
-
 updateAppConfig({
   origin: useRequestURL().host.startsWith("app.")
     ? useRequestURL().host.replace("app.", "")
@@ -48,15 +46,6 @@ if (
 const resolvedOriginRouting = computed(
   () => useAppConfig().resolvedOriginRouting
 );
-
-onMounted(async () => {
-  if (
-    useAppConfig().resolvedOriginRouting === "app" &&
-    useAuth().status.value === "authenticated"
-  ) {
-    useWsStore().user ? await useWsStore().initNodeWebSocket("nodeId") : true;
-  }
-});
 </script>
 
 <style scoped></style>

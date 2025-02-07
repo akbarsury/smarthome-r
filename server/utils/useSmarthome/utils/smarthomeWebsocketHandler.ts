@@ -31,9 +31,9 @@ export class SmarthomeWebsocketHandler {
 
         open: async (peer) => {
             console.log(`Client connection open: ${peer.id}`);
-            const appId = "ap3south67"
-            const validApp = await this.storage.app.validApp(appId);
-            if (validApp) this.peerInit(peer, appId).then(async (appId) => {
+            const { queries } = new UrlParse(peer)
+            const validApp = queries["appId"] ? await this.storage.app.validApp(queries["appId"]) : false;
+            if (validApp) this.peerInit(peer, queries["appId"]).then(async (appId) => {
                 if (!this.socketPath[appId]) this.socketPath[appId] = {
                     expires: new Date().getTime() + (24 * 3600),
                     socket: this.SmarthomeWebsocket

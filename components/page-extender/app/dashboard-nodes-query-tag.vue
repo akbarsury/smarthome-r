@@ -1,7 +1,12 @@
 <template>
   <div class="flex justify-between mb-4">
     <div class="basis">
-      <NuxtLink :to="{ name: 'app-dashboard-nodes' }">
+      <NuxtLink
+        :to="{
+          name: 'app-dashboard-appId-nodes',
+          params: { appId: useAppStore().appId },
+        }"
+      >
         <Icon class="mb-[-2px]" name="ic:round-arrow-back-ios-new" />
         <span> Kembali </span>
       </NuxtLink>
@@ -176,11 +181,6 @@ const itemAction: ItemAction = {
     }
 
     if (itemAction.data.value.confirmed === false) {
-      console.log({
-        nodeId,
-        ...itemAction.data.value,
-        clickTime: itemAction._counter.value?.counter,
-      });
       const { _value: executionData } = await useApiFetch(
         `/api/v1.0/node/${nodeId}/execution` as "/api/v1.0/node/:nodeId/execution",
         {
@@ -210,7 +210,7 @@ const itemAction: ItemAction = {
 onMounted(async () => {
   if (typeof nodeId === "string") {
     useWsStore().webSocket.onReady(() =>
-      console.log(useWsStore().webSocket.send("bind", { nodeId }))
+      useWsStore().webSocket.send("bind", { nodeId })
     );
   }
 });

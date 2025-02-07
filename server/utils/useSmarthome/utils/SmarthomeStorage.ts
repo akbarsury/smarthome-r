@@ -21,9 +21,10 @@ type NodeExec = {
 }
 
 class SmarthomeStorage {
-    private storage = useStorage('db')
+    private storage = useStorage("db")
     private auth = new FirebaseAdmin().auth
     private firestore = new FirebaseAdmin().firestore
+    userStorage = useStorage("db/users")
 
     private util = {
         user: {
